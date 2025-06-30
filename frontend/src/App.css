@@ -1,0 +1,53 @@
+/* General App Styles */
+.container {
+  padding-top: 20px; /* Add some space below the fixed header if applicable */
+}
+
+/* Add more app-specific global styles here if needed */
+/* For example, styles for a common layout structure if Header is not fixed */
+
+/* Example: Basic styling for a "page" concept if not handled by index.css */
+.page-content {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 5px;
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */ /* Optional */
+}
+
+/* Styles for the Header component (can also be in Header.module.css or Header.css) */
+.app-header {
+  background-color: #333;
+  padding: 1rem 2rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px; /* Space between header and content */
+}
+
+.app-header .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.app-header nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.app-header nav ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-header nav ul li a:hover,
+.app-header nav ul li a.active {
+  text-decoration: underline;
+  color: #61dafb; /* React blue for hover/active, just an example */
+}
