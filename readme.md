@@ -1,57 +1,91 @@
-# Insurance Broker Backend & Customer Portal
+# Insurance Broker Platform
 
-## 1. Application Overview
+This project is a full-stack application for an insurance brokerage, featuring a backend API and a customer-facing frontend portal.
 
-This project is the backend system for an insurance brokerage, designed to manage customers, policies, claims, and products. It also includes specifications for a customer-facing portal allowing clients to view their policies, submit claims, and manage their profiles.
+## Project Overview
 
-The system aims to streamline broker operations and enhance customer self-service capabilities.
+The platform aims to provide:
+*   A robust backend for brokers and administrators to manage customers, policies, claims, insurance products, and internal operations.
+*   A user-friendly customer portal for clients to view their policies, file claims, get quotes, and manage their accounts.
 
-## 2. Tech Stack Summary
+## Tech Stack
 
-The proposed technology stack includes:
-
+*   **Backend:** Node.js, Express.js, MongoDB (with Mongoose) - *Note: Backend files are currently at the project root but should be in the `backend/` directory.*
+*   **Frontend:** React.js, React Router - Located in the `frontend/` directory.
 *   **Database:** MongoDB
-*   **Backend Framework (Option 1):** Python with FastAPI
-    *   Asynchronous capabilities, data validation with Pydantic, Motor for MongoDB.
-*   **Backend Framework (Option 2):** Node.js with Express.js
-    *   Event-driven, non-blocking I/O, Mongoose ODM for MongoDB.
-*   **Frontend Framework (Options):** React, Vue.js, or Angular
-*   **Authentication:** JWT (JSON Web Tokens)
-*   **Authorization:** Role-Based Access Control (RBAC)
-*   **Caching (Recommended):** Redis
-*   **Background Tasks/Message Queues (Recommended):**
-    *   Python: Celery with RabbitMQ/Redis
-    *   Node.js: BullMQ/Kafka
-*   **Deployment:** Docker, Kubernetes (optional), PaaS (e.g., Heroku, AWS Elastic Beanstalk)
 
-*(The final choice of backend and frontend frameworks will depend on team expertise and project specifics.)*
+## Current Status
 
-## 3. API Endpoint Summary
+The project has initial boilerplate setups for both the backend and frontend.
+Refer to the [TODO.md](TODO.md) for a detailed list of features and their current implementation status.
 
-This section will be updated as more API modules are designed.
+## Backend API Endpoints
 
-### 3.1 Customer Management API Module
+The backend API is the backbone of the platform, providing data and services to both the admin interface (to be built) and the customer portal.
 
-**Base URL:** `/api/v1/customers`
+### Implemented Endpoints:
 
-| Method | Endpoint                                     | Description                                  |
-| :----- | :------------------------------------------- | :------------------------------------------- |
-| GET    | `/`                                          | List customers (paginated, filterable, sortable) |
-| POST   | `/`                                          | Create a new customer                        |
-| GET    | `/{customer_id}`                             | Get details for a specific customer          |
-| PUT    | `/{customer_id}`                             | Fully update a specific customer             |
-| PATCH  | `/{customer_id}`                             | Partially update a specific customer         |
-| DELETE | `/{customer_id}`                             | Delete a specific customer (soft delete)     |
-| POST   | `/{customer_id}/documents`                   | Upload a document for a customer             |
-| GET    | `/{customer_id}/documents`                   | List documents for a customer                |
-| GET    | `/{customer_id}/documents/{document_id}`       | Get a specific document's details            |
-| GET    | `/{customer_id}/documents/{document_id}/download` | Download a specific document               |
-| DELETE | `/{customer_id}/documents/{document_id}`       | Delete a specific document                   |
-| POST   | `/{customer_id}/interactions`                | Add an interaction log for a customer        |
-| GET    | `/{customer_id}/interactions`                | List interaction logs for a customer         |
-| GET    | `/{customer_id}/interactions/{interaction_id}` | Get a specific interaction log's details     |
-| PUT    | `/{customer_id}/interactions/{interaction_id}` | Update an interaction log (restricted)       |
-| DELETE | `/{customer_id}/interactions/{interaction_id}` | Delete an interaction log (highly restricted)|
+*   **Health Check:**
+    *   **GET** `/api/v1/health`
+        *   Description: Checks the health and status of the API.
+        *   Response:
+            ```json
+            {
+              "success": true,
+              "message": "API is healthy and running!",
+              "uptime": 123.456, // Server uptime in seconds
+              "timestamp": 1670000000000 // Current server timestamp
+            }
+            ```
 
----
-*(Further details on request/response payloads and error handling for each endpoint are documented separately in the API design specifications.)*
+More endpoints will be documented here as they are implemented. For a full list of planned API functionalities, please see the backend features section in [TODO.md](TODO.md).
+
+## Directory Structure Suggestion
+
+Ideally, the project root should be cleaner. The backend's `package.json` and `src` directory should be moved into a dedicated `backend/` folder.
+
+**Current (Mixed Root):**
+```
+.
+├── frontend/           # React.js frontend application
+├── src/                # CURRENT Backend source
+├── package.json        # CURRENT Backend package.json
+├── TODO.md
+└── README.md           # This file
+```
+
+**Target Structure:**
+```
+.
+├── backend/            # Node.js/Express.js backend application
+│   ├── src/
+│   └── package.json
+│   └── README.md       # Backend specific setup and details
+├── frontend/           # React.js frontend application
+│   ├── public/
+│   ├── src/
+│   └── package.json
+│   └── README.md       # Frontend specific setup and details
+├── TODO.md             # Detailed list of features and tasks
+└── README.md           # This file (Project root README)
+```
+
+## Setup and Installation
+
+Detailed setup instructions for each part of the application:
+
+*   **Backend Setup:**
+    *   *Assuming backend files are at project root for now:*
+    *   Create a `.env` file in the project root (see `backend/src/config/env.js` for template, `backend/src/index.js` loads it).
+    *   Run `npm install` in the project root.
+    *   Run `npm run dev` or `npm start` in the project root.
+    *   (Once backend files are moved to `backend/`, refer to `backend/README.md`)
+*   **Frontend Setup:** [frontend/README.md](frontend/README.md)
+
+## Contributing
+
+Details on contributing to this project will be added later. For now, refer to the [TODO.md](TODO.md) for tasks that need attention.
+
+## License
+
+ISC (Placeholder - can be updated as needed)

@@ -1,126 +1,159 @@
-# TODO List - Insurance Broker Platform
+# Project TODO List - Insurance Broker Platform
 
-This document tracks pending tasks and future development areas for the Insurance Broker Backend and Customer Portal.
+## I. Foundational Setup
 
-## I. Core Backend Development
+*   [x] Suggest Tech Stack
+*   [x] Outline Features and Functions
+*   [x/~) Organize into Menu Structure (Initial structure defined, may need refinement as features are built)
+*   [x] Backend Project Setup (Node.js/Express.js basic structure)
+    *   [x] Scaffold Backend Directory Structure
+    *   [x] Create Core Backend Files (index.js, db.js, env.js)
+    *   [x] Create sample health check endpoint (`/api/v1/health`)
+    *   [x] Create `package.json` for backend
+*   [x] Frontend Project Setup (React basic structure)
+    *   [x] Scaffold Frontend Directory Structure
+    *   [x] Create Core Frontend Files (index.html, App.js, HomePage.js, Header.js)
+    *   [x] Create `package.json` for frontend
 
-### 1. API Design & Development
-    - [x] Customer Management API Module Design (Endpoints, Payloads, Auth/Authz, Errors)
-    - [ ] Policy Management API Module Design
-        - [ ] Endpoints for CRUD operations on Policies
-        - [ ] Endpoints for Endorsements
-        - [ ] Endpoints for Renewals
-        - [ ] Endpoints for Cancellations
-    - [ ] Claims Management API Module Design
-        - [ ] Endpoints for FNOL (First Notice of Loss)
-        - [ ] Endpoints for Claim Status Tracking & Updates
-        - [ ] Endpoints for Claim Document Management (sub-resource)
-    - [ ] Product Management API Module Design
-        - [ ] Endpoints for CRUD operations on Insurance Products
-        - [ ] Endpoints for managing Product Types and Coverage Options
-    - [ ] Insurer Management API Module Design
-        - [ ] Endpoints for CRUD operations on Insurers
-    - [ ] User (Broker Staff) Management API Module Design
-        - [ ] Endpoints for CRUD operations on Staff Users
-        - [ ] Endpoints for Role & Permission Management
-    - [ ] Quote Management API Module Design
-    - [ ] Task Management API Module Design
-    - [ ] Audit Log API (if direct query access is needed, otherwise backend service)
+## II. Backend Features (Broker/Admin Portal)
 
-### 2. Backend Implementation (Choose Tech Stack: Python/FastAPI or Node.js/Express)
-    - [ ] Setup base project structure (folders, config, linters, formatters)
-    - [ ] Implement Customer Management API Endpoints
-        - [ ] Database connection and ODM/driver setup (e.g., Motor/Pydantic or Mongoose)
-        - [ ] Models/Schemas for MongoDB collections
-        - [ ] CRUD operations logic for Customers
-        - [ ] Document upload/download logic (integration with file storage like S3)
-        - [ ] Interaction log management logic
-    - [ ] Implement Authentication & Authorization
-        - [ ] JWT generation and validation middleware
-        - [ ] RBAC middleware/decorators for endpoint protection
-    - [ ] Implement Policy Management API Endpoints
-    - [ ] Implement Claims Management API Endpoints
-    - [ ] Implement Product Management API Endpoints
-    - [ ] Implement Insurer Management API Endpoints
-    - [ ] Implement User Management API Endpoints
-    - [ ] Implement Quote Management API Endpoints
-    - [ ] Implement Task Management API Endpoints
-    - [ ] Implement Audit Logging mechanism
+*   **Dashboard & Analytics:**
+    *   [ ] Overview of key metrics
+    *   [ ] Sales performance reports
+    *   [ ] Customer demographics and insights
+    *   [ ] Claim analysis
+    *   [ ] Commission tracking and reports
+*   **Customer Management (CRM):**
+    *   [ ] Define Customer Model (MongoDB Schema)
+    *   [ ] API: Create Customer
+    *   [ ] API: View Customer Details
+    *   [ ] API: Update Customer
+    *   [ ] API: Delete Customer
+    *   [ ] API: List/Search Customers
+    *   [ ] Customer Segmentation/Grouping logic
+    *   [ ] Communication logs (emails, calls, notes)
+    *   [ ] Task management related to customers
+*   **Policy Management:**
+    *   [ ] Define Policy Model
+    *   [ ] API: Create New Quote/Proposal
+    *   [ ] API: Issue New Policy
+    *   [ ] API: View/Search Policies
+    *   [ ] API: Manage Policy Endorsements/Amendments
+    *   [ ] API: Track Policy Lifecycle
+    *   [ ] Automated renewal reminders and processing logic
+    *   [ ] Document management for policy documents
+*   **Insurance Product Management:**
+    *   [ ] Define Product Model
+    *   [ ] API: Define/Configure Insurance Products
+    *   [ ] API: Manage Product Details
+    *   [ ] API: Set up Underwriting Rules (basic structure)
+    *   [ ] API: Manage Insurer/Carrier Information for Products
+    *   [ ] API: Rate Table Management
+*   **Claims Management:**
+    *   [ ] Define Claim Model
+    *   [ ] API: Log New Claim (FNOL)
+    *   [ ] API: Track Claim Status
+    *   [ ] API: Assign Claims
+    *   [ ] API: Upload/Manage Claim Documents
+    *   [ ] API: Communication Log for Claims
+    *   [ ] API: Generate Claim Reports (basic)
+*   **Billing & Payments:**
+    *   [ ] Define Invoice/Payment Models
+    *   [ ] API: Generate Invoices
+    *   [ ] API: Track Payment Status
+    *   [ ] Payment Gateway Integration (Stripe, PayPal, etc.) - Research and implement chosen gateway
+    *   [ ] API: Manage Commission Calculations
+    *   [ ] API: Reconciliation of Payments
+*   **User Management (for Staff/Brokers):**
+    *   [ ] Define User Model (Admin/Broker roles)
+    *   [~] Authentication (JWT setup - basic structure exists, needs full implementation for login/registration)
+    *   [ ] Authorization (Role-Based Access Control - RBAC)
+    *   [ ] API: Create Staff/Broker Accounts
+    *   [ ] API: View/Edit/Deactivate Staff/Broker Accounts
+    *   [ ] Audit trails for user actions
+*   **Insurer/Carrier Management:**
+    *   [ ] Define Insurer/Carrier Model
+    *   [ ] API: Maintain Database of Insurance Carriers
+    *   [ ] API: Store Carrier Details & Product Offerings
+*   **Reporting & Business Intelligence:**
+    *   [ ] Design Reporting Module Structure
+    *   [ ] API: Basic Sales Reports
+    *   [ ] API: Basic Customer Reports
+    *   [ ] Data export capabilities
+*   **Communication & Notifications:**
+    *   [ ] Setup Email Service (e.g., SendGrid, Nodemailer)
+    *   [ ] API: Send Automated Email/SMS Notifications (define triggers)
+    *   [ ] Template management for communications
+*   **Document Management System (General):**
+    *   [ ] Strategy for file uploads (e.g., S3, local storage)
+    *   [ ] API: Upload/Download/Delete documents associated with customers, policies, claims
+    *   [ ] Versioning and access control for documents
+*   **Settings & Configuration:**
+    *   [ ] API: Manage System Settings (branding, currency, etc.)
+    *   [ ] API: Manage Integration Settings
 
-### 3. Database
-    - [x] Initial MongoDB Schema Design (Customers, Policies, Claims, Products, Users, Insurers, Quotes, Tasks, AuditLogs)
-    - [x] Initial Indexing Strategy for MongoDB
-    - [ ] Refine MongoDB schema based on implementation details and query patterns.
-    - [ ] Implement schema validation at the database or ODM level.
-    - [ ] Setup database backup and recovery strategy.
-    - [ ] Performance tuning and advanced indexing as needed.
+## III. Customer Portal Features (Frontend)
 
-### 4. Third-Party Integrations
-    - [ ] Payment Gateway Integration (for premium payments)
-        - [ ] Research and select a payment gateway provider
-        - [ ] Implement payment processing logic
-        - [ ] Securely handle payment tokens/data
-    - [ ] Email Service Integration (for notifications, password resets, etc.)
-    - [ ] SMS Service Integration (optional, for notifications)
-    - [ ] Address Validation Service (optional)
+*   **Dashboard:**
+    *   [ ] UI: Overview of active policies
+    *   [ ] UI: Pending actions
+    *   [ ] UI: Recent claim statuses
+*   **My Profile:**
+    *   [ ] UI: View/Update personal information
+    *   [ ] UI: Manage communication preferences
+    *   [ ] UI: Change password and security settings
+*   **My Policies:**
+    *   [ ] UI: View detailed policy information
+    *   [ ] UI: Download policy documents
+    *   [ ] UI: Request policy changes/endorsements
+    *   [ ] UI: View premium payment history
+    *   [ ] UI: Initiate policy renewal
+*   **Get a Quote / New Insurance:**
+    *   [ ] UI: Browse available insurance products
+    *   [ ] UI: Forms to get personalized quotes
+    *   [ ] UI: Compare quotes
+    *   [ ] UI: Purchase new policies online (if enabled)
+*   **Claims:**
+    *   [ ] UI: Submit a new claim (FNOL) online
+    *   [ ] UI: Upload supporting documents/photos for claims
+    *   [ ] UI: Track status of submitted claims
+    *   [ ] UI: View claim history
+*   **Payments:**
+    *   [ ] UI: View outstanding premium payments
+    *   [ ] UI: Make online payments securely
+    *   [ ] UI: View payment history and download receipts
+*   **Documents:**
+    *   [ ] UI: Access/Download personal insurance-related documents
+    *   [ ] UI: Upload documents required by the broker
+*   **Support & Communication:**
+    *   [ ] UI: Secure messaging with the broker
+    *   [ ] UI: FAQ section
+    *   [ ] UI: Contact information for support
+*   **Notifications:**
+    *   [ ] UI: View notifications (policies, claims, payments)
+*   **Authentication:**
+    *   [ ] UI: Login Page
+    *   [ ] UI: Registration Page (if applicable)
+    *   [ ] UI: Forgot Password / Reset Password flow
+    *   [~] Connect to Backend Auth (JWT handling - basic structure needs connection)
 
-## II. Frontend Development
+## IV. General / Cross-Cutting Concerns
 
-### 1. Broker Admin Portal
-    - [ ] UI/UX Design for Broker Admin Portal
-        - [ ] Wireframes and Mockups
-    - [ ] Setup Frontend Project (React, Vue, or Angular)
-    - [ ] Implement Authentication (Login, Logout, Token Management)
-    - [ ] Develop Customer Management UI (List, Create, View, Edit, Delete)
-    - [ ] Develop Policy Management UI
-    - [ ] Develop Claims Management UI
-    - [ ] Develop Product Management UI
-    - [ ] Develop Dashboard UI with Analytics
-    - [ ] Develop User Management UI
-    - [ ] Develop Task Management UI
+*   [ ] Comprehensive Error Handling (Backend & Frontend)
+*   [ ] Input Validation (Backend & Frontend)
+*   [ ] Security Hardening (SQL Injection, XSS, CSRF prevention, etc.)
+*   [ ] Logging (Backend - more detailed)
+*   [ ] Unit Tests (Backend & Frontend for key modules)
+*   [ ] Integration Tests
+*   [ ] E2E Tests (e.g., Cypress, Playwright)
+*   [ ] CI/CD Pipeline Setup
+*   [ ] API Documentation (e.g., Swagger/OpenAPI for backend)
+*   [ ] Thorough testing of all features on various devices/browsers.
+*   [ ] Accessibility (a11y) considerations for frontend.
+*   [ ] Performance Optimization.
+*   [~] README files updates (this task)
 
-### 2. Customer Portal
-    - [ ] UI/UX Design for Customer Portal
-        - [ ] Wireframes and Mockups
-    - [ ] Setup Frontend Project
-    - [ ] Implement Authentication (Login, Registration, Forgot Password, Profile Management)
-    - [ ] Develop Dashboard UI (Policy Overview, Claim Status)
-    - [ ] Develop "My Policies" UI (View Details, Download Documents)
-    - [ ] Develop "My Claims" UI (Submit FNOL, Track Status, Upload Documents)
-    - [ ] Develop "Get Quote" UI
-    - [ ] Develop Online Payment UI
-
-## III. General & DevOps
-
-### 1. Testing
-    - [ ] Setup Testing Frameworks (e.g., Pytest/Jest for backend, Jest/RTL/Cypress for frontend)
-    - [ ] Write Unit Tests for backend logic and API endpoints
-    - [ ] Write Integration Tests for API modules
-    - [ ] Write Unit Tests for frontend components
-    - [ ] Write End-to-End (E2E) Tests for key user flows
-    - [ ] Define Test Data Strategy
-
-### 2. CI/CD (Continuous Integration / Continuous Deployment)
-    - [ ] Setup CI pipeline (e.g., GitHub Actions, GitLab CI)
-        - [ ] Automated builds, linting, testing
-    - [ ] Setup CD pipeline for deployment to staging/production environments
-
-### 3. Logging, Monitoring & Alerting
-    - [ ] Implement structured logging throughout the backend.
-    - [ ] Setup centralized logging solution (e.g., ELK stack, CloudWatch Logs).
-    - [ ] Setup application performance monitoring (APM).
-    - [ ] Define key metrics and setup alerting for critical issues.
-
-### 4. Documentation
-    - [x] Initial README.md with app info and Customer API summary
-    - [x] Initial TODO.md
-    - [ ] Maintain and expand API documentation (e.g., using Swagger/OpenAPI for backend).
-    - [ ] User documentation for broker staff and customers (if needed).
-    - [ ] System architecture documentation.
-
-### 5. Security Hardening
-    - [ ] Regular security audits and vulnerability scanning.
-    - [ ] Input validation and output encoding.
-    - [ ] Dependency vulnerability management.
-    - [ ] Adherence to security best practices for chosen tech stack.
-    - [ ] Data encryption at rest and in transit.
+**Legend:**
+*   `[ ]` - Not started
+*   `[~]` - In progress / Needs further action / Partially complete
+*   `[x]` - Completed
