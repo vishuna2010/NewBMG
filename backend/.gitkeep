@@ -1,0 +1,3 @@
+# This directory is intended for the Node.js/Express.js backend application.
+# Currently, the backend files (package.json, src/, etc.) are at the project root.
+# They should be moved into this 'backend/' directory for better project organization.
