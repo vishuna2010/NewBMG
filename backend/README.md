@@ -1,8 +1,6 @@
 # Insurance Broker Platform - Backend API
 
-This directory (`backend/`) is designated for the Node.js/Express.js backend application that powers the Insurance Broker Platform.
-
-**IMPORTANT NOTE:** As of the last update, the backend application files (its `package.json`, `src/` directory, etc.) are currently located in the **project root**. They should be moved into this `backend/` directory to maintain a clean project structure. The instructions below assume the files will be moved here. If you are running the backend from the project root, adjust paths accordingly.
+This directory (`backend/`) contains the Node.js/Express.js backend application that powers the Insurance Broker Platform.
 
 ## Overview
 
@@ -28,18 +26,17 @@ The backend API serves as the central hub for:
 *   Node.js (v16 or later recommended) and npm.
 *   A running MongoDB instance (local or cloud-based like MongoDB Atlas).
 
-### Setup and Installation (Assuming files are moved to `backend/`)
+### Setup and Installation
 
 1.  **Navigate to this Directory:**
-    Make sure your terminal is in the `backend` directory:
+    Make sure your terminal is in this `backend/` directory:
     ```bash
     cd path/to/your/project/backend
     ```
-    *(If backend files are still at project root, these commands should be run from the project root, and paths in `package.json` or `src/index.js` might need to be correct for that context).*
 
 2.  **Create a `.env` File:**
-    In this `backend/` directory (or project root if files haven't been moved), create a `.env` file. This file will store your environment-specific configurations.
-    Copy the structure from `src/config/env.js` (which contains placeholders) or use the example below, and fill in your actual values:
+    In this `backend/` directory, create a `.env` file. This file will store your environment-specific configurations.
+    You can copy `src/config/env.js` (which contains placeholder variable names) to `.env` as a template, then fill in your actual values:
 
     ```env
     MONGO_URI=your_mongodb_connection_string_here
@@ -48,23 +45,25 @@ The backend API serves as the central hub for:
     JWT_SECRET=your_very_strong_jwt_secret_key # IMPORTANT: Use a strong, random key
     JWT_EXPIRE=30d # Example: token expiry time
     ```
-    **Note:** Ensure the `src/index.js` is configured to load the `.env` file correctly (e.g., `require('dotenv').config();` for a root `.env` file relative to `src/index.js`'s execution path).
+    The `src/index.js` file is configured with `require('dotenv').config();`, so it will automatically load variables from the `.env` file located in this `backend/` directory (which becomes the root for the backend process).
 
 3.  **Install Dependencies:**
-    Install the necessary packages:
+    Run the following command from within this `backend/` directory:
     ```bash
     npm install
     ```
+    This will install all necessary packages listed in `backend/package.json` and create a `package-lock.json` file.
 
 4.  **Run the Development Server:**
-    To start the backend server with `nodemon` (for automatic restarts on file changes):
-    ```bash
-    npm run dev
-    ```
-    Alternatively, to run it normally:
-    ```bash
-    npm start
-    ```
+    From within this `backend/` directory:
+    *   To start the server with `nodemon` (for automatic restarts on file changes):
+        ```bash
+        npm run dev
+        ```
+    *   Alternatively, to run it normally:
+        ```bash
+        npm start
+        ```
     The server should start, and you'll see console messages indicating the port it's running on and successful connection to MongoDB.
 
 ## API Endpoints
@@ -80,17 +79,13 @@ Refer to the root `README.md` or `TODO.md` for a more comprehensive list of plan
 
 ## Project Structure (within `backend/src/`)
 
-*   `config/`: Database connection, environment variable setup.
+*   `config/`: Database connection, environment variable setup (`env.js` serves as a template/example).
 *   `controllers/`: Request handlers that contain the logic for API endpoints.
 *   `middleware/`: Custom middleware functions (e.g., for authentication, error handling).
 *   `models/`: Mongoose schemas and models for MongoDB collections.
 *   `routes/`: Express route definitions that map URLs to controller functions.
 *   `services/`: Business logic that is too complex for controllers (optional, can be part of controllers for smaller apps).
 *   `utils/`: Utility functions.
-*   `index.js`: The main entry point for the backend application.
+*   `index.js`: The main entry point for the backend application (located in `backend/src/index.js`).
 
-## Moving Files (Recommendation)
-
-To achieve the intended project structure:
-1.  Move the existing `package.json`, `package-lock.json` (if it exists), `src/` directory, and `.env` file (if created at root) from the project root into this `backend/` directory.
-2.  Adjust any paths in scripts or configurations if necessary after moving. The current `package.json` scripts (`start`, `dev`) use `src/index.js` which will be correct if `package.json` is in the same directory as `src/`.
+The `package.json` in this `backend/` directory contains the scripts (`start`, `dev`) which correctly point to `src/index.js` relative to this directory.

@@ -1,6 +1,0 @@
-# This file is intentionally left blank.
-# It's a common convention to use .gitkeep files to ensure that Git tracks
-# otherwise empty directories. This helps maintain the intended folder structure
-# in the repository even before actual code files are added to these directories.
-#
-# You can remove this file once you add other files to the 'src/middleware' directory.
