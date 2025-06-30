@@ -42,9 +42,9 @@ module.exports = {
 // **IMPORTANT**: For a real application, create a separate `.env` file in the project root
 // and add `src/config/env.js` and `.env` to your `.gitignore` file.
 // DO NOT commit actual secrets.
-MONGODB_URI=("mongodb+srv://cargodirect242:UyNH62Uxz3EXoD6U@cargodirect.ok0i3tr.mongodb.net/bmginsurenew?retryWrites=true&w=majority&appName=bmginsurenew")
-//MONGO_URI=mongodb://localhost:27017/insurance_broker_dev_placeholder
+MONGO_URI=mongodb://localhost:27017/insurance_broker_dev_placeholder
 PORT=5001
 NODE_ENV=development
 JWT_SECRET=default_jwt_secret_replace_me
-JWT_EXPIRE=30=d
+JWT_EXPIRE=30d
+
