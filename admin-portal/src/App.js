@@ -15,6 +15,8 @@ import UserManagementPage from './pages/UserManagementPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminProfilePage from './pages/AdminProfilePage';
 import LoginPage from './pages/LoginPage';
+import ProductCreatePage from './pages/ProductCreatePage';
+import ProductEditPage from './pages/ProductEditPage';
 
 function App() {
   // For now, assume authenticated and redirect to dashboard
@@ -36,6 +38,8 @@ function App() {
                   <Route path="policies" element={<PoliciesPage />} />
                   <Route path="claims" element={<ClaimsPage />} />
                   <Route path="products" element={<ProductsPage />} />
+                  <Route path="products/new" element={<ProductCreatePage />} />
+                  <Route path="products/edit/:id" element={<ProductEditPage />} />
                   <Route path="insurers" element={<InsurersPage />} />
                   <Route path="billing" element={<BillingPage />} />
                   <Route path="reports" element={<ReportsPage />} />

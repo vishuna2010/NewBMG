@@ -225,9 +225,11 @@
 *   **Dashboard (`AdminDashboardPage.js`):**
     *   [~] UI: Admin dashboard with key metrics - Sales Report tabs now use real data. Sales Analytics chart has table fallback. Summary cards connected. (Placeholder page created; "real data" part is future work).
     *   [~] UI: Admin Overview page refactored for theme consistency (Styling of placeholder page).
-*   **Product Management (`ProductsPage.js` & potential sub-components):**
-    *   [~] UI: Product List page refactored for theme consistency (Placeholder page created).
-    *   [~] UI: Create/Edit Product pages (review for text color consistency - Placeholder page implies these actions).
+*   **Product Management (`ProductsPage.js`, `ProductCreatePage.js`, `ProductEditPage.js`):**
+    *   [~] UI: Product List page (`ProductsPage.js`) - *Basic list, create/edit/delete buttons implemented.*
+    *   [~] UI: Create Product page (`ProductCreatePage.js` with `ProductForm.js`) - *Form structure and create functionality implemented.*
+    *   [~] UI: Edit Product page (`ProductEditPage.js` with `ProductForm.js`) - *Form structure, data loading, and update functionality implemented.*
+    *   [ ] UI: Review Product forms for styling consistency and advanced validation.
 *   **Client Management (`CustomersPage.js` & potential sub-components):**
     *   [x] UI: Full CRUD for Clients (Placeholder page created; "Full CRUD" is future work).
 *   **User Management (General Staff/Brokers - `UserManagementPage.js`):**
