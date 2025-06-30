@@ -7,18 +7,17 @@ const {
   deleteProduct,
 } = require('../controllers/productController');
 
+const { protect, authorize } = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
-// TODO: Protect routes that modify data (POST, PUT, DELETE) with authentication and authorization middleware (e.g., isAdmin)
-// Example: router.post('/', protect, authorize('admin'), createProduct);
-
 router.route('/')
-  .post(createProduct)    // POST /api/v1/products
-  .get(getAllProducts);   // GET /api/v1/products
+  .post(protect, authorize('admin', 'staff'), createProduct) // Allow staff to create products too
+  .get(getAllProducts);   // Publicly accessible for now, or use (protect, authorize('admin', 'staff', 'agent'))
 
 router.route('/:id')
-  .get(getProductById)    // GET /api/v1/products/:id
-  .put(updateProduct)     // PUT /api/v1/products/:id
-  .delete(deleteProduct); // DELETE /api/v1/products/:id
+  .get(getProductById)    // Publicly accessible for now
+  .put(protect, authorize('admin', 'staff'), updateProduct)
+  .delete(protect, authorize('admin'), deleteProduct); // Only admin can delete
 
 module.exports = router;

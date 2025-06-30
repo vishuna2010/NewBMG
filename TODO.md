@@ -51,11 +51,14 @@
     *   [~] API: View/Search Policies - *Basic `getAllPolicies` and `getPolicyById` implemented for admin; advanced search/filter pending.*
     *   [~] API: Document management for policy documents (general - see also S3 for specific docs) - *Model supports documents array, `updatePolicy` can add them.*
 *   **Claims Management (API):**
-    *   [ ] API: Define Claim Model
-    *   [ ] API: Log New Claim (FNOL)
-    *   [ ] API: Track Claim Status (detailed statuses pending "NEW: Claims Management Enhancements")
-    *   [ ] API: Assign Claims to adjusters/brokers
-    *   [~] API: S3 integration for claim attachments (upload & linking - Backend saves files locally and serves them via a new API. Full S3 integration for claims pending.)
+    *   [x] API: Define Claim Model - *Includes fields for attachments and notes*
+    *   [~] API: Log New Claim (FNOL) - *Basic implementation, attachment handling is placeholder for S3*
+    *   [~] API: Track Claim Status - *Basic status update endpoint implemented; detailed workflow pending*
+    *   [~] API: Assign Claims to adjusters/brokers - *Basic assignment endpoint implemented*
+    *   [~] API: S3 integration for claim attachments (upload & linking - Backend saves files locally and serves them via a new API. Full S3 integration for claims pending.) - *Model supports `fileUrl`, controller has placeholders, AWS SDK added.*
+    *   [~] API: Manage Claim Attachments - *Basic `addClaimAttachment` endpoint implemented (placeholder for S3)*
+    *   [~] API: Manage Claim Notes - *Basic `addClaimNote` endpoint implemented*
+    *   [~] API: View/Search Claims - *Basic `getAllClaims` and `getClaimById` implemented; advanced search/filter pending*
     *   [ ] API: Generate Claim Reports (basic)
 *   **Client (Customer) Management (CRM - API):**
     *   [x] API: Define Customer Model (MongoDB Schema) - *Includes password hashing*
@@ -65,34 +68,47 @@
     *   [~] API: View Customer Details - *Basic getCustomerProfile (simulated) & getCustomerById (admin) implemented*
     *   [~] API: Update Customer (e.g., profile updates from portal) - *Basic updateCustomerProfile (simulated) & updateCustomer (admin) implemented*
     *   [~] API: Delete Customer - *Basic deleteCustomer (admin) implemented*
-    *   [~] API: List/Search Customers - *Basic getAllCustomers (admin) implemented, search/filter pending*
+    *   [~] API: List/Search Customers - *Basic getAllCustomers (admin) implemented, search/filter pending* -> See User Management (Generic)
     *   [ ] API: Customer Segmentation/Grouping logic
     *   [ ] API: Communication logs (emails, calls, notes) - (see also "Integrations & Communications")
     *   [ ] API: Task management related to customers
-*   **Agent Management (API):**
-    *   [ ] API: Define Agent User Model (extends base User model or separate)
-    *   [x] API: Phase 1a: Admin API for agent creation
-    *   [~] API: Agent Login & Session Management (Phase 2 - Covered by general user login with 'agent' role)
-*   **User Management (General - Staff/Brokers/Admins - API):**
-    *   [ ] Define User Model (Admin/Broker roles, base for Agent/Client)
-    *   [x] API: Phase 1a: Basic Login API
-    *   [~] API: Phase 1b: Implement JWT generation on login & cookie-based session
-    *   [~] API: Phase 1c: Implement API route protection middleware (check JWT & role)
-    *   [~] API: Phase 1e: Implement Logout functionality (clear session/cookie)
-    *   [ ] API: Create Staff/Broker Accounts (distinct from agent creation if needed)
-    *   [ ] API: View/Edit/Deactivate Staff/Broker Accounts
+*   **Agent Management (API):** -> Merged into User Management (Generic)
+    *   [ ] API: Define Agent User Model (extends base User model or separate) -> Covered by User Model role
+    *   [x] API: Phase 1a: Admin API for agent creation -> Covered by User CRUD with role 'agent'
+    *   [~] API: Agent Login & Session Management (Phase 2 - Covered by general user login with 'agent' role) -> Covered by general login
+*   **User Management & Authentication (Generic - API):**
+    *   [x] API: Define unified User Model (Customer, Agent, Staff, Admin) - *Includes password hashing, roles. Replaced Customer Model.*
+    *   [x] API: User Registration endpoint (`/api/v1/auth/register`) - *Implemented, assigns default role.*
+    *   [x] API: User Login endpoint (`/api/v1/auth/login`) - *Implemented with JWT generation.*
+    *   [x] API: Implement JWT generation on login.
+    *   [x] API: Implement 'protect' (JWT check) and 'authorize' (role check) middleware.
+    *   [x] API: Apply `protect` and `authorize` middleware to existing resource routes (Products, Quotes, Policies, Claims, Users).
+    *   [x] API: Get current logged-in user details (`/api/v1/auth/me`) - *Implemented.*
+    *   [x] API: Update current user's profile (`/api/v1/users/profile`) - *Basic implementation, uses req.user.*
+    *   [~] API: Admin CRUD for Users (`/api/v1/users`) - *Basic GET all, GET by ID, PUT, DELETE implemented, operates on User model.*
+        *   [~] List/Search Users - *Basic getAllUsers implemented, search/filter pending.*
+        *   [~] Create User (by Admin, can set role) - *Covered by register or future admin create user endpoint.*
+        *   [~] View User Details (by Admin)
+        *   [~] Update User (by Admin - e.g., role, isActive)
+        *   [~] Delete User (by Admin)
+    *   [ ] API: Implement Logout functionality (e.g., token invalidation if using blocklist, or client-side removal)
+    *   [ ] API: Create Staff/Broker Accounts (specific admin endpoint if different from generic user creation with role)
+    *   [x] Refactor: Rename customerController.js to userController.js and customerRoutes.js to userRoutes.js.
+    *   [ ] API: Controller Logic - Implement `req.user` based filtering/ownership checks in `quoteController.js` (getAllQuotes, getQuoteById, updateQuoteStatus).
+    *   [ ] API: Controller Logic - Implement `req.user` based filtering/ownership checks in `policyController.js` (getAllPolicies, getPolicyById).
+    *   [ ] API: Controller Logic - Implement `req.user` based filtering/ownership/authorship checks in `claimController.js` (logNewClaim notes, getAllClaims, getClaimById, addClaimNote author).
 *   **Settings & Configuration (Backend APIs):**
     *   [x] API: Implement system settings (Phase 1: Backend Model & APIs)
-    *   [x] API: Implement Email settings (Backend functional)
+    *   [~] API: Implement Email settings (Nodemailer configured, .env setup needed by user for specific service like Mailtrap/Gmail).
     *   [x] API: Implement roles (Backend CRUD functional)
     *   [x] API: Implement tax bracket (Now Tax Classes; Backend CRUD functional)
     *   [~] API: Implement Compliance Checks / Develop Regulatory Reporting (APIs to support Admin UI)
     *   [x] API: Manage Third-Party API Integrations (CRUD including Update)
     *   [~] API: Implement eSignature integration (backend part for request/status)
 *   **Integrations & Communications (Backend APIs):**
-    *   [~] API: Implement Notifications (Backend Stub & logic for generating notifications)
-    *   [~] API: Implement Communication Module (Backend Stub & logic for storing/retrieving messages)
-    *   [~] API: Implement Payment Gateway Logic (Conceptual Design & Backend Stub for chosen gateway)
+    *   [~] API: Basic Email Notifications - Welcome & Quote Acceptance emails implemented (Nodemailer with Ethereal/env config).
+    *   [~] API: Implement Communication Module (Backend Stub & logic for storing/retrieving messages) - *No change this round*
+    *   [~] API: Stripe Payment Gateway - Backend stub for creating Payment Intent implemented.
 *   **Operations & Management (Backend APIs):**
     *   [~] API: Implement Reporting & Dashboard (Admin dashboard summary API exists. Sales Report data fetching.)
     *   [ ] API: Implement Document Management (linking, metadata, access control - core file handling separate)

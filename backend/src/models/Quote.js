@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
-const AutoIncrement = require('mongoose-sequence')(mongoose); // For auto-incrementing quoteNumber
 
 const QuoteSchema = new mongoose.Schema(
   {
     quoteNumber: {
-      type: String, // Will be set by mongoose-sequence to be like Q00001
+      type: String,
       unique: true,
     },
     customer: { // For now, store as ObjectId, can be populated later
       type: mongoose.Schema.ObjectId,
-      ref: 'Customer', // Assuming a 'Customer' model will exist
+      ref: 'User', // Changed from Customer to User
       // required: [true, 'Customer ID is required for a quote'], // Making it optional for now if quotes can be anonymous initially
     },
     product: {
@@ -61,34 +60,6 @@ const QuoteSchema = new mongoose.Schema(
     timestamps: true, // createdAt, updatedAt
   }
 );
-
-// Plugin for auto-incrementing quoteNumber like Q00001, Q00002
-// Note: mongoose-sequence needs to be installed (npm install mongoose-sequence)
-// This is a conceptual setup for quoteNumber.
-// A more robust sequence might be needed or a different ID generation strategy.
-// For simplicity in this step, I will make quoteNumber a String that we can manually format for now
-// if mongoose-sequence is not installed or causes issues in this environment.
-// Let's remove mongoose-sequence for now to avoid dependency issues unless you confirm to add it.
-/*
-QuoteSchema.plugin(AutoIncrement, {
-  id: 'quote_number_seq',
-  inc_field: 'quoteNumberInternal', // internal field for sequence
-  reference_fields: [], // if you need sequence per some other field e.g. per year
-  // start_seq: 1, // if you want to start from a specific number
-});
-
-// Virtual to create formatted quoteNumber
-QuoteSchema.virtual('quoteNumber').get(function() {
-  return `Q${String(this.quoteNumberInternal).padStart(5, '0')}`;
-});
-*/
-
-// For now, let's make quoteNumber a simple required string.
-// The controller can generate it or it can be added later.
-// Re-evaluating: A unique, human-readable ID is good.
-// Let's stick to the concept but make it a manual assignment in controller for now if sequence plugin is an issue.
-// For this step, I'll define it as a string and assume it will be populated by the controller.
-// Removing the mongoose-sequence plugin for now to keep it simple.
 
 QuoteSchema.pre('save', function(next) {
   if (!this.quoteNumber) {

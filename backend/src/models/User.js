@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const CustomerSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
@@ -51,15 +51,12 @@ const CustomerSchema = new mongoose.Schema(
       enum: ['Individual', 'Business'],
       default: 'Individual',
     },
-    // 'role' helps if you merge this with a general User model later.
-    // For a dedicated Customer model, it might be implicit.
-    // For now, let's assume a customer is always 'customer' role implicitly
-    // or handle roles in a more generic User model if staff/agents also need login.
-    // role: {
-    //   type: String,
-    //   enum: ['customer', 'user'], // if distinguishing from other non-admin user types
-    //   default: 'customer',
-    // },
+    role: {
+      type: String,
+      enum: ['customer', 'agent', 'staff', 'admin'],
+      default: 'customer',
+      required: [true, 'User role is required']
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -75,7 +72,7 @@ const CustomerSchema = new mongoose.Schema(
 );
 
 // Encrypt password using bcrypt before saving
-CustomerSchema.pre('save', async function (next) {
+UserSchema.pre('save', async function (next) {
   // Only run this function if password was actually modified (or is new)
   if (!this.isModified('password')) {
     return next();
@@ -87,14 +84,14 @@ CustomerSchema.pre('save', async function (next) {
 });
 
 // Method to compare entered password with hashed password in database
-CustomerSchema.methods.matchPassword = async function (enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // TODO: Add any virtuals or other methods if needed.
 // Example: Virtual for full name
-// CustomerSchema.virtual('fullName').get(function() {
+// UserSchema.virtual('fullName').get(function() {
 //   return `${this.firstName} ${this.lastName}`;
 // });
 
-module.exports = mongoose.model('Customer', CustomerSchema);
+module.exports = mongoose.model('User', UserSchema);

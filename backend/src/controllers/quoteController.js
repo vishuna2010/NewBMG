@@ -1,5 +1,7 @@
 const Quote = require('../models/Quote');
 const Product = require('../models/Product'); // To fetch product details for snapshot
+const User = require('../models/User'); // To fetch customer email for notification
+const sendEmail = require('../utils/emailUtils'); // Import the email utility
 
 // @desc    Create a new quote
 // @route   POST /api/v1/quotes
@@ -159,6 +161,24 @@ exports.updateQuoteStatus = async (req, res, next) => {
         // Potentially clear validUntil or log acceptance/rejection date
     }
     await quote.save();
+
+    // Send notification email if quote is accepted
+    if (quote.status === 'Accepted' && quote.customer) {
+      try {
+        const customer = await User.findById(quote.customer);
+        if (customer && customer.email) {
+          await sendEmail({
+            to: customer.email,
+            subject: `Your Quote ${quote.quoteNumber} has been Accepted!`,
+            text: `Hi ${customer.firstName},\n\nGreat news! Your quote (Ref: ${quote.quoteNumber}) for product "${quote.productDetailsSnapshot.name}" with a premium of ${quote.calculatedPremium} ${quote.productDetailsSnapshot.currency} has been marked as Accepted.\n\nPlease proceed to the next steps for policy issuance if applicable.\n\nBest Regards,\nThe Insurance Platform Team`,
+            html: `<p>Hi ${customer.firstName},</p><p>Great news! Your quote (Ref: ${quote.quoteNumber}) for product "${quote.productDetailsSnapshot.name}" with a premium of ${quote.calculatedPremium} ${quote.productDetailsSnapshot.currency} has been marked as Accepted.</p><p>Please proceed to the next steps for policy issuance if applicable.</p><p>Best Regards,<br/>The Insurance Platform Team</p>`,
+          });
+        }
+      } catch (emailError) {
+        console.error(`Failed to send quote acceptance email for quote ${quote.quoteNumber}:`, emailError);
+        // Do not fail the main operation if email sending fails, just log it.
+      }
+    }
 
     res.status(200).json({
       success: true,

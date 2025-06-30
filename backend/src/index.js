@@ -24,14 +24,21 @@ app.get('/', (req, res) => {
 const healthRoutes = require('./routes/healthRoutes');
 const productRoutes = require('./routes/productRoutes');
 const quoteRoutes = require('./routes/quoteRoutes');
-const customerRoutes = require('./routes/customerRoutes');
+const userRoutes = require('./routes/userRoutes'); // Updated from customerRoutes
 const policyRoutes = require('./routes/policyRoutes');
+const claimRoutes = require('./routes/claimRoutes');
+const authRoutes = require('./routes/authRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/auth', authRoutes); // Auth routes for register, login, me
+app.use('/api/v1/users', userRoutes); // Now using userRoutes
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/quotes', quoteRoutes);
-app.use('/api/v1/customers', customerRoutes);
 app.use('/api/v1/policies', policyRoutes);
+app.use('/api/v1/claims', claimRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+
 
 // Example for future routes (to be expanded)
 

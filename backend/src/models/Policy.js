@@ -9,7 +9,7 @@ const PolicySchema = new mongoose.Schema(
     },
     customer: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Customer',
+      ref: 'User', // Changed from Customer to User
       required: [true, 'Customer is required for a policy'],
     },
     product: {

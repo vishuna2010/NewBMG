@@ -8,24 +8,24 @@ const {
   // deleteQuote,        // Optional, if implemented
 } = require('../controllers/quoteController');
 
+const { protect, authorize } = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
-// TODO: Protect routes appropriately with authentication and authorization middleware.
-// Example:
-// const { protect, authorize } = require('../middleware/auth');
-// router.post('/', protect, createQuote); // Only authenticated users can create quotes
-// router.get('/', protect, authorize('admin', 'agent'), getAllQuotes); // Admin/Agent see all
-
 router.route('/')
-  .post(createQuote)     // POST /api/v1/quotes
-  .get(getAllQuotes);    // GET /api/v1/quotes
+  // Authenticated users (customers, agents) can create quotes. Admins/staff might also.
+  .post(protect, createQuote)
+  // Admins/staff/agents can see all quotes (controllers will filter for agents if needed). Customers only their own (controller logic).
+  .get(protect, getAllQuotes);
 
 router.route('/:id')
-  .get(getQuoteById);     // GET /api/v1/quotes/:id
-  // .put(updateQuoteDetails) // Optional: PUT /api/v1/quotes/:id (for updating draft quote details)
-  // .delete(deleteQuote);    // Optional: DELETE /api/v1/quotes/:id
+  // Owner, or admin/staff/agent can view a specific quote. Controller needs to implement ownership check if user is customer.
+  .get(protect, getQuoteById);
+  // .put(protect, updateQuoteDetails) // Optional: If draft quotes can be updated by creator
+  // .delete(protect, authorize('admin'), deleteQuote); // Optional: Maybe only admin can delete certain drafts
 
 router.route('/:id/status')
-  .put(updateQuoteStatus); // PUT /api/v1/quotes/:id/status (for updating quote status)
+  // Owner can accept/reject. Admin/staff/agent might change other statuses.
+  .put(protect, updateQuoteStatus);
 
 module.exports = router;
