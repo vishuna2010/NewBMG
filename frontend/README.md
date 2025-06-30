@@ -54,7 +54,7 @@ This application provides customers with an interface to:
         ```bash
         yarn start
         ```
-    This will typically open the application in your web browser at `http://localhost:3000`. The server will watch for file changes and automatically reload.
+    This application is configured via a `.env` file in this directory to run on port **3003** by default (i.e., `http://localhost:3003`). If port 3003 is unavailable, Create React App might prompt you to use another port. The server will watch for file changes and automatically reload.
 
 ## Available Scripts
 

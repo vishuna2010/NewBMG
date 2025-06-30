@@ -63,7 +63,20 @@ The project is organized as follows:
 Detailed setup instructions for each part of the application can be found in their respective README files:
 
 *   **Backend Setup:** See [backend/README.md](backend/README.md)
-*   **Frontend Setup:** See [frontend/README.md](frontend/README.md)
+*   **Customer Portal Frontend Setup:** See [frontend/README.md](frontend/README.md)
+*   **Admin Portal Frontend Setup:** See [admin-portal/README.md](admin-portal/README.md)
+
+## Development Environment
+
+For local development, the applications are configured to run on the following default ports:
+
+*   **Customer Portal (Frontend):** `http://localhost:3003` (configured via `frontend/.env`)
+*   **Backend API:** `http://localhost:3004` (configurable via `backend/.env` - you'll need to set this)
+*   **Admin Portal (Frontend):** `http://localhost:3005` (configured via `admin-portal/.env`)
+
+Ensure these ports are free or adjust the configurations in the respective `.env` files if needed. Refer to the README in each application's directory for more details on starting them.
+
+A root `.gitignore` file is included to help prevent committing sensitive `.env` files and other common temporary files.
 
 ## Contributing
 

@@ -36,11 +36,11 @@ The backend API serves as the central hub for:
 
 2.  **Create a `.env` File:**
     In this `backend/` directory, create a `.env` file. This file will store your environment-specific configurations.
-    You can copy `src/config/env.js` (which contains placeholder variable names) to `.env` as a template, then fill in your actual values:
+    You can copy `src/config/env.js` (which contains placeholder variable names) to `.env` as a template, then fill in your actual values. It's recommended to use port `3004` for consistency during local development:
 
     ```env
     MONGO_URI=your_mongodb_connection_string_here
-    PORT=5000 # Or any port you prefer for the backend
+    PORT=3004 # Recommended port for local development
     NODE_ENV=development # or 'production'
     JWT_SECRET=your_very_strong_jwt_secret_key # IMPORTANT: Use a strong, random key
     JWT_EXPIRE=30d # Example: token expiry time
