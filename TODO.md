@@ -246,21 +246,27 @@
     *   [~] UI: Create Product page (`ProductCreatePage.js` with `ProductForm.js`) - *Form structure and create functionality implemented.*
     *   [~] UI: Edit Product page (`ProductEditPage.js` with `ProductForm.js`) - *Form structure, data loading, and update functionality implemented.*
     *   [ ] UI: Review Product forms for styling consistency and advanced validation.
-*   **Client Management (`CustomersPage.js` & potential sub-components):**
-    *   [x] UI: Full CRUD for Clients (Placeholder page created; "Full CRUD" is future work).
-*   **User Management (General Staff/Brokers - `UserManagementPage.js`):**
-     *   [~] UI: User Management page refactored for theme consistency. (Placeholder page created).
-*   **Agent Management (`pages/admin/agents/` - needs specific page like `AgentsPage.js`):**
-    *   [x] UI: Phase 1b: Admin UI for Agent Creation & Management (Full CRUD - Placeholder implies this, actual page `AgentsPage.js` to be created if distinct from UserManagementPage).
-    *   [~] UI: List page (`pages/admin/agents.vue` - path to be `AgentsPage.js`) refactored for theme consistency.
+*   **Client Management (`CustomersPage.js` & potential sub-components):** -> Merged into User Management UI
+    *   [x] UI: Full CRUD for Clients (Placeholder page created; "Full CRUD" is future work). -> See User Management UI
+*   **User Management (Admin UI - `UserManagementPage.js`, `UserEditPage.js`):**
+     *   [~] UI: User List page (`UserManagementPage.js`) - *Basic list, edit/delete buttons implemented.*
+     *   [~] UI: Edit User page (`UserEditPage.js`) - *Form structure, data loading, and update for role/status implemented.*
+     *   [ ] UI: Create User page/modal (by Admin, can set role) - *Service exists, UI component needed.*
+     *   [ ] UI: Review User forms for styling, validation, and comprehensive field coverage.
+*   **Agent Management (`pages/admin/agents/` - needs specific page like `AgentsPage.js`):** -> Merged into User Management UI
+    *   [x] UI: Phase 1b: Admin UI for Agent Creation & Management (Full CRUD - Placeholder implies this, actual page `AgentsPage.js` to be created if distinct from UserManagementPage). -> See User Management UI
+    *   [~] UI: List page (`pages/admin/agents.vue` - path to be `AgentsPage.js`) refactored for theme consistency. -> See User Management UI
 *   **Claims Workflow Management (`ClaimsPage.js` & potential sub-components):**
     *   [~] UI: Status updates, etc., including viewing attachments (Placeholder page created).
 *   **Quote Management (Could be part of `QuotesPage.js` or a new `AdminQuotesPage.js`):**
     *   [~] UI: Admin UI for comprehensive quote management (may need review/enhancement)
     *   [~] UI: Admin/client access to generated PDF quotes (needs review) - *Admin part*
-*   **Policy Management (`PoliciesPage.js` & potential sub-components):**
-    *   [x] UI: Admin UI for Policy List, View, Create, Edit implemented (Placeholder page created).
-    *   [~] UI: Manage Policy Status - Phase 2: Implement 'cancelled' status (UI part)
+*   **Policy Management (Admin UI - `PoliciesPage.js`, `PolicyDetailPage.js`):**
+    *   [~] UI: Policy List page (`PoliciesPage.js`) - *Basic list with links to details implemented.*
+    *   [~] UI: Policy Detail page (`PolicyDetailPage.js`) - *Displays comprehensive policy info, allows status updates.*
+    *   [ ] UI: Create Policy from Quote - *Admin trigger for this flow (if different from customer/agent flow) needs UI.*
+    *   [ ] UI: Manage Policy Documents (add/view/delete) on detail page.
+    *   [ ] UI: Review Policy pages for styling consistency and advanced filtering/actions.
 *   **Settings & Configuration (`SettingsPage.js` & potential sub-components):**
     *   [x] UI: System Settings Management functional (Placeholder page created).
     *   [x] UI: Email settings (Admin UI functional and verified, styling standardized - Placeholder page created).

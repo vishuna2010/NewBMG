@@ -5,7 +5,7 @@ const Sidebar = () => {
   // Admin Panel Menu Structure from previous plan
   const menuItems = [
     { path: "/admin/dashboard", name: "Dashboard" },
-    { path: "/admin/customers", name: "Customers" },
+    // { path: "/admin/customers", name: "Customers" }, // Merged into User Management
     { path: "/admin/policies", name: "Policies" },
     { path: "/admin/claims", name: "Claims" },
     { path: "/admin/products", name: "Products" },

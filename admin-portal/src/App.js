@@ -17,6 +17,8 @@ import AdminProfilePage from './pages/AdminProfilePage';
 import LoginPage from './pages/LoginPage';
 import ProductCreatePage from './pages/ProductCreatePage';
 import ProductEditPage from './pages/ProductEditPage';
+import UserEditPage from './pages/UserEditPage';
+import PolicyDetailPage from './pages/PolicyDetailPage';
 
 function App() {
   // For now, assume authenticated and redirect to dashboard
@@ -34,8 +36,9 @@ function App() {
               <MainLayout>
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="customers" element={<CustomersPage />} />
+                  {/* <Route path="customers" element={<CustomersPage />} />  // Removed, merged into /users */}
                   <Route path="policies" element={<PoliciesPage />} />
+                  <Route path="policies/:id" element={<PolicyDetailPage />} /> {/* Added route for policy details */}
                   <Route path="claims" element={<ClaimsPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="products/new" element={<ProductCreatePage />} />
@@ -45,6 +48,7 @@ function App() {
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="communications" element={<CommunicationsPage />} />
                   <Route path="users" element={<UserManagementPage />} />
+                  <Route path="users/edit/:id" element={<UserEditPage />} /> {/* Added route for editing a user */}
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="profile" element={<AdminProfilePage />} />
                   <Route index element={<Navigate to="dashboard" />} /> {/* Default admin page */}
