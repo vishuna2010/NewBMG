@@ -22,7 +22,10 @@ app.get('/', (req, res) => {
 
 // Mount routers
 const healthRoutes = require('./routes/healthRoutes');
+const productRoutes = require('./routes/productRoutes');
+
 app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // Example for future routes (to be expanded)
 // const policyRoutes = require('./routes/policies');

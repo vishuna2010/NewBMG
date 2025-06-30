@@ -37,6 +37,29 @@ The backend API is the backbone of the platform, providing data and services to 
               "timestamp": 1670000000000 // Current server timestamp
             }
             ```
+*   **Product Management (`/api/v1/products`)**
+    *   **POST** `/api/v1/products`
+        *   Description: Create a new insurance product.
+        *   Access: Private (Admin - currently unprotected)
+        *   Request Body: JSON object with product details (e.g., `name`, `description`, `productType`, `basePrice`, `currency`, `coverageDetails`, `termsAndConditions`, `isActive`).
+        *   Response: `201 Created` with the new product data.
+    *   **GET** `/api/v1/products`
+        *   Description: Get a list of all insurance products. Supports query parameters for filtering (e.g., `?isActive=true`).
+        *   Access: Public (or as configured)
+        *   Response: `200 OK` with a list of products.
+    *   **GET** `/api/v1/products/:id`
+        *   Description: Get a single insurance product by its ID.
+        *   Access: Public (or as configured)
+        *   Response: `200 OK` with the product data, or `404 Not Found`.
+    *   **PUT** `/api/v1/products/:id`
+        *   Description: Update an existing insurance product by its ID.
+        *   Access: Private (Admin - currently unprotected)
+        *   Request Body: JSON object with fields to update.
+        *   Response: `200 OK` with the updated product data, or `404 Not Found`.
+    *   **DELETE** `/api/v1/products/:id`
+        *   Description: Delete an insurance product by its ID.
+        *   Access: Private (Admin - currently unprotected)
+        *   Response: `200 OK` with empty data, or `404 Not Found`.
 
 More endpoints will be documented here as they are implemented. For a full list of planned API functionalities, please see the backend features section in [TODO.md](TODO.md).
 

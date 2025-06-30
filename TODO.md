@@ -23,9 +23,9 @@
 ## II. Backend Tasks (`backend/`)
 
 *   **Product Management (API):**
-    *   [ ] Define Product Model (MongoDB Schema)
-    *   [ ] API: Define/Configure Insurance Products (CRUD)
-    *   [ ] API: Manage Product Details (coverage, premiums, terms, conditions, riders)
+    *   [x] Define Product Model (MongoDB Schema)
+    *   [~] API: Define/Configure Insurance Products (CRUD) - *Basic CRUD implemented*
+    *   [~] API: Manage Product Details (coverage, premiums, terms, conditions, riders) - *Basic CRUD allows management*
     *   [ ] API: Set up Underwriting Rules (basic structure)
     *   [ ] API: Manage Insurer/Carrier Information for Products
     *   [ ] API: Rate Table Management
