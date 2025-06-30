@@ -1,0 +1,10 @@
+/* App-specific styles for Admin Portal */
+/* Most layout styles are in index.css for this example */
+
+/* Example: Ensure App takes full height if not already handled by #root in index.css */
+/* .App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+} */
+/* This is handled by #root in index.css */
