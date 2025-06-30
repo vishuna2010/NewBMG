@@ -30,26 +30,26 @@
     *   [ ] API: Manage Insurer/Carrier Information for Products
     *   [ ] API: Rate Table Management
 *   **Quote Engine (API & Core Logic):**
+    *   [x] Define Quote Model (MongoDB Schema)
     *   **Phase 1: Core Quote Generation & Storage**
-        *   [ ] API: Allow product selection for quoting
-        *   [ ] API: Support dynamic form data based on selected product (simplified)
-        *   [ ] API: Implement mock premium calculation logic
-        *   [ ] API: Save basic quote data (product, inputs, mock premium) to MongoDB
-        *   [~] API: Implement Quote Status Management (accept/reject, ensure quotes are linked to `customerId`)
-        *   [~] API: Verify/Implement dedicated endpoint for fetching single quote details (e.g., `GET /api/quotes/[quoteId]`)
+        *   [~] API: Allow product selection for quoting - *Covered by createQuote taking productId*
+        *   [~] API: Support dynamic form data based on selected product (simplified) - *Covered by `quoteInputs: Mixed` in model and controller*
+        *   [x] API: Implement mock premium calculation logic - *Basic mock logic added in createQuote*
+        *   [x] API: Save basic quote data (product snapshot, inputs, mock premium) to MongoDB - *Handled by createQuote*
+        *   [~] API: Implement Quote Status Management (accept/reject, view status) - *Basic view and update status implemented, more logic/auth pending.*
+        *   [x] API: Verify/Implement dedicated endpoint for fetching single quote details (e.g., `GET /api/quotes/[quoteId]`) - *Implemented*
+        *   [x] API: Implement endpoint for fetching all quotes (e.g., `GET /api/quotes`) - *Implemented, basic filtering pending*
         *   [ ] API: Future: Ensure only relevant client or authorized agent can change quote status (depends on Auth & Roles)
     *   **Phase 2: PDF Generation & S3**
         *   [x] Backend: Implement PDF quote document generation
         *   [ ] API: Integrate with S3 for storing PDF quotes
 *   **Policy Issuance & Management (API):**
-    *   [ ] API: Define Policy Mongoose Model & API Endpoints (CRUD)
-    *   [ ] API: Implement "Convert Quote to Policy" functionality
-        *   [ ] Create new Policy document from Quote details
-    *   [x] API: Manage Policy Status - Phase 1: Activation
-    *   [~] API: Manage Policy Status - Phase 2: Implement 'cancelled' status (backend part)
-    *   [~] API & Conceptual Cron: Manage Policy Status - Phase 3: Implement 'expired' status logic (API for manual check)
-    *   [ ] API: View/Search Policies
-    *   [ ] API: Document management for policy documents (general - see also S3 for specific docs)
+    *   [x] API: Define Policy Mongoose Model & API Endpoints (CRUD) - *Model defined, basic CRUD for admin implemented.*
+    *   [x] API: Implement "Convert Quote to Policy" functionality - *Implemented in `createPolicyFromQuote`*
+        *   [x] Create new Policy document from Quote details - *Done as part of the above*
+    *   [~] API: Manage Policy Status - *Basic status updates via `updatePolicy` and soft delete. More granular control (like Phase 1 Activation) pending full workflow.*
+    *   [~] API: View/Search Policies - *Basic `getAllPolicies` and `getPolicyById` implemented for admin; advanced search/filter pending.*
+    *   [~] API: Document management for policy documents (general - see also S3 for specific docs) - *Model supports documents array, `updatePolicy` can add them.*
 *   **Claims Management (API):**
     *   [ ] API: Define Claim Model
     *   [ ] API: Log New Claim (FNOL)
@@ -58,14 +58,14 @@
     *   [~] API: S3 integration for claim attachments (upload & linking - Backend saves files locally and serves them via a new API. Full S3 integration for claims pending.)
     *   [ ] API: Generate Claim Reports (basic)
 *   **Client (Customer) Management (CRM - API):**
-    *   [ ] API: Define Customer Model (MongoDB Schema)
-    *   [ ] API: Client Registration (Phase 1: Basic Registration)
-    *   [~] API: Client Login & Session Management (Phase 2 - Covered by general user login)
-    *   [ ] API: Create Customer
-    *   [ ] API: View Customer Details
-    *   [ ] API: Update Customer (e.g., profile updates from portal)
-    *   [ ] API: Delete Customer
-    *   [ ] API: List/Search Customers
+    *   [x] API: Define Customer Model (MongoDB Schema) - *Includes password hashing*
+    *   [x] API: Client Registration (Phase 1: Basic Registration) - *Implemented*
+    *   [~] API: Client Login & Session Management (Phase 2 - Covered by general user login, login endpoint itself pending)
+    *   [x] API: Create Customer - *Covered by Client Registration*
+    *   [~] API: View Customer Details - *Basic getCustomerProfile (simulated) & getCustomerById (admin) implemented*
+    *   [~] API: Update Customer (e.g., profile updates from portal) - *Basic updateCustomerProfile (simulated) & updateCustomer (admin) implemented*
+    *   [~] API: Delete Customer - *Basic deleteCustomer (admin) implemented*
+    *   [~] API: List/Search Customers - *Basic getAllCustomers (admin) implemented, search/filter pending*
     *   [ ] API: Customer Segmentation/Grouping logic
     *   [ ] API: Communication logs (emails, calls, notes) - (see also "Integrations & Communications")
     *   [ ] API: Task management related to customers

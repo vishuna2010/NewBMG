@@ -23,13 +23,17 @@ app.get('/', (req, res) => {
 // Mount routers
 const healthRoutes = require('./routes/healthRoutes');
 const productRoutes = require('./routes/productRoutes');
+const quoteRoutes = require('./routes/quoteRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const policyRoutes = require('./routes/policyRoutes');
 
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/quotes', quoteRoutes);
+app.use('/api/v1/customers', customerRoutes);
+app.use('/api/v1/policies', policyRoutes);
 
 // Example for future routes (to be expanded)
-// const policyRoutes = require('./routes/policies');
-// app.use('/api/v1/policies', policyRoutes);
 
 const PORT = process.env.PORT || 5000;
 
