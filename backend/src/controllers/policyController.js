@@ -1,6 +1,6 @@
 const Policy = require('../models/Policy');
 const Quote = require('../models/Quote');
-const Customer = require('../models/Customer'); // May not be strictly needed here if IDs are sufficient
+const User = require('../models/User'); // Corrected from Customer to User. May not be strictly needed if only IDs from populated fields are used.
 const Product = require('../models/Product');   // May not be strictly needed here
 
 // @desc    Create a new policy from an accepted quote

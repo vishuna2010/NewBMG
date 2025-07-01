@@ -83,7 +83,7 @@ exports.getAllQuotes = async (req, res, next) => {
     // For now, fetches all. Add req.query for filtering later.
     const query = {}; // Example: if (req.user.role !== 'admin') query.customer = req.user.id;
 
-    const quotes = await Quote.find(query).populate('product', 'name productType').populate('customer', 'name email'); // Populate basic details
+    const quotes = await Quote.find(query).populate('product', 'name productType').populate('customer', 'firstName lastName email'); // Populate basic details
 
     res.status(200).json({
       success: true,
