@@ -1,4 +1,19 @@
 const nodemailer = require('nodemailer');
+const EmailTemplate = require('../models/EmailTemplate'); // Import EmailTemplate model
+
+// Function to replace placeholders in a string (e.g., email body or subject)
+const replacePlaceholders = (templateString, dataContext) => {
+  if (!templateString) return '';
+  let processedString = templateString;
+  for (const key in dataContext) {
+    if (dataContext.hasOwnProperty(key)) {
+      const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, 'g'); // Matches {{ key }} or {{key}}
+      processedString = processedString.replace(placeholder, dataContext[key]);
+    }
+  }
+  return processedString;
+};
+
 
 // Function to create a transporter.
 // For development, it can generate test credentials from Ethereal.email
@@ -86,18 +101,38 @@ const createTransporter = async () => {
   return transporter;
 };
 
-// Function to send an email
-// options: { to: String, subject: String, text: String, html: String }
-const sendEmail = async (options) => {
+// Function to send an email using a template
+// options: { to: String, templateName: String, dataContext: Object }
+const sendTemplatedEmail = async (options) => {
+  const { to, templateName, dataContext } = options;
+
+  if (!to || !templateName || !dataContext) {
+    console.error('sendTemplatedEmail: Missing required options (to, templateName, dataContext)');
+    throw new Error('Missing required options for sending templated email.');
+  }
+
   try {
+    const template = await EmailTemplate.findOne({ templateName, isActive: true });
+
+    if (!template) {
+      console.error(`Email template '${templateName}' not found or is inactive.`);
+      // Fallback: send a generic error or a very basic message if critical
+      // For now, we'll throw an error that should be caught by the caller.
+      throw new Error(`Email template '${templateName}' not found or is inactive.`);
+    }
+
+    const subject = replacePlaceholders(template.subject, dataContext);
+    const htmlBody = replacePlaceholders(template.htmlBody, dataContext);
+    const textBody = template.textBody ? replacePlaceholders(template.textBody, dataContext) : ''; // Optional
+
     const transporter = await createTransporter();
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Insurance Platform" <noreply@insuranceplatform.example>', // Sender address
-      to: options.to, // List of receivers
-      subject: options.subject, // Subject line
-      text: options.text, // Plain text body
-      html: options.html, // HTML body
+      from: process.env.EMAIL_FROM || '"Insurance Platform" <noreply@insuranceplatform.example>',
+      to: to,
+      subject: subject,
+      text: textBody || htmlBody.replace(/<[^>]+>/g, ''), // Simple text version from HTML if textBody is not provided
+      html: htmlBody,
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -116,4 +151,8 @@ const sendEmail = async (options) => {
   }
 };
 
-module.exports = sendEmail;
+// Keep the old sendEmail for direct sending if ever needed, or remove if all emails become templated.
+// For clarity, let's assume for now that all primary notifications will be templated.
+// If a simple, non-templated email is needed, a separate utility or direct nodemailer use in specific cases might be better.
+// module.exports = sendEmail; // Old export
+module.exports = { sendTemplatedEmail }; // Export the new function

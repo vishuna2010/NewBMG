@@ -1,8 +1,11 @@
 const Claim = require('../models/Claim');
 const Policy = require('../models/Policy');
-// const { uploadFileToS3, getSignedUrl, deleteFileFromS3 } = require('../utils/s3Handler'); // Placeholder for S3 utility
-// const multer = require('multer'); // For handling multipart/form-data (file uploads)
-// const path = require('path');
+const User = require('../models/User'); // For adjuster role check and author name
+const { uploadToS3 /*, deleteFromS3 */ } = require('../utils/s3Handler'); // Import S3 utility
+
+// Note: File upload middleware (e.g., using multer) should be applied at the route level
+// before these controller actions if files are part of the request.
+// This controller assumes req.file or req.files is populated by such middleware for new uploads.
 
 // --- File Upload Configuration (Conceptual - using Multer for local storage as placeholder) ---
 // This would be more complex with direct S3 uploads or a dedicated file handling service.
@@ -63,16 +66,26 @@ exports.logNewClaim = async (req, res, next) => {
       }]
     };
 
-    // --- Placeholder for S3 Attachment Logic ---
-    // if (req.files && req.files.length > 0) { // If using multer and files are uploaded
-    //   for (const file of req.files) {
-    //     // const s3Data = await uploadFileToS3(file.path, file.filename, file.mimetype); // Example
-    //     // claimData.attachments.push({ fileName: file.originalname, fileUrl: s3Data.Location, fileType: file.mimetype });
-    //     // fs.unlinkSync(file.path); // Clean up local file if multer saves it temporarily
-    //      claimData.attachments.push({ fileName: file.originalname, fileUrl: `/uploads/claims/${file.filename}`, fileType: file.mimetype }); // Local placeholder
-    //   }
-    // } else
-    if (initialAttachments && Array.isArray(initialAttachments)) { // If URLs are provided directly
+    // --- S3 Attachment Logic ---
+    if (req.files && req.files.length > 0) { // If using multer and files are uploaded (e.g., from handleMultipleUploads)
+      for (const file of req.files) {
+        try {
+          const s3Data = await uploadToS3(file.buffer, file.originalname, file.mimetype, `claims/${policy._id.toString()}`);
+          claimData.attachments.push({
+            fileName: file.originalname,
+            fileUrl: s3Data.Location, // URL from S3
+            fileType: file.mimetype,
+            // description: file.description // If description is part of file upload form data per file
+          });
+        } catch (s3Error) {
+          console.error("S3 Upload Error in logNewClaim:", s3Error);
+          // Decide if to fail the whole claim or log claim with failed uploads
+          // For now, let's continue and log, attachments can be added later
+        }
+      }
+    } else if (initialAttachments && Array.isArray(initialAttachments)) {
+        // This path might be deprecated if direct S3 upload via middleware is the primary method
+        console.warn("logNewClaim: Using 'initialAttachments' with pre-set URLs. Consider direct S3 upload via middleware.");
         initialAttachments.forEach(att => {
             if(att.fileName && att.fileUrl) {
                 claimData.attachments.push({
@@ -84,7 +97,7 @@ exports.logNewClaim = async (req, res, next) => {
             }
         });
     }
-    // --- End Placeholder ---
+    // --- End S3 Attachment Logic ---
 
     const newClaim = await Claim.create(claimData);
 
@@ -281,14 +294,23 @@ exports.assignClaimToAdjuster = async (req, res, next) => {
 
 // @desc    Add an attachment to a claim
 // @route   POST /api/v1/claims/:id/attachments
-// @access  Private - TODO: Add auth
+// @access  Private (User associated with claim, Adjuster, Admin/Staff)
 exports.addClaimAttachment = async (req, res, next) => {
-    // Similar to logNewClaim, this would use multer or expect pre-uploaded file URLs.
-    // For S3, this is where you'd call your S3 upload utility.
-    const { fileName, fileUrl, fileType, description } = req.body; // Assuming URL is provided after upload elsewhere
+    // This function now expects req.file (from single upload middleware) or req.files (from multiple)
+    // For simplicity, let's assume single file upload via req.file for this example.
+    // The route would use handleSingleUpload('claimAttachment') or handleMultipleUploads('claimAttachments', 5)
+    const loggedInUser = req.user;
 
-    if (!fileName || !fileUrl) {
-        return res.status(400).json({ success: false, error: 'fileName and fileUrl are required for attachments.' });
+    if (!req.file && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({ success: false, error: 'No file uploaded.' });
+    }
+
+    // For single file:
+    const fileToUpload = req.file;
+    // If multiple: const filesToUpload = req.files; // Then loop through filesToUpload
+
+    if (!fileToUpload) { // Fallback if somehow middleware didn't attach but no error
+         return res.status(400).json({ success: false, error: 'File processing error.' });
     }
 
     try {
@@ -297,27 +319,46 @@ exports.addClaimAttachment = async (req, res, next) => {
             return res.status(404).json({ success: false, error: `Claim not found with id ${req.params.id}` });
         }
 
-        // TODO: S3 upload logic would go here if file is part of request body (e.g. req.file from multer)
-        // const s3Data = await uploadFileToS3(req.file.buffer, uniqueName, req.file.mimetype);
-        // const newAttachment = { fileName: req.file.originalname, fileUrl: s3Data.Location, fileType: req.file.mimetype, description };
+        // Authorization: Check if user is customer, assigned adjuster, or admin/staff
+        const isCustomer = loggedInUser.role === 'customer' && claim.customer.toString() === loggedInUser.id;
+        const isAdjuster = claim.adjuster && claim.adjuster.toString() === loggedInUser.id;
+        const isAdminOrStaff = ['admin', 'staff'].includes(loggedInUser.role);
+
+        if (!isCustomer && !isAdjuster && !isAdminOrStaff) {
+            return res.status(403).json({ success: false, error: 'Not authorized to add attachments to this claim.' });
+        }
+
+        // Upload to S3
+        const s3Data = await uploadToS3(
+            fileToUpload.buffer,
+            fileToUpload.originalname,
+            fileToUpload.mimetype,
+            `claims/${claim._id.toString()}/attachments` // Example S3 folder structure
+        );
 
         const newAttachment = {
-            fileName,
-            fileUrl,
-            fileType: fileType || 'application/octet-stream',
-            description: description || ''
+            fileName: fileToUpload.originalname,
+            fileUrl: s3Data.Location, // URL from S3
+            fileType: fileToUpload.mimetype,
+            description: req.body.description || '' // Optional description from form body
         };
         claim.attachments.push(newAttachment);
 
         claim.notes.push({
-            note: `Attachment added: ${fileName}`,
-            author: req.user.id, // Assuming req.user is populated by protect middleware
-            authorName: `${req.user.firstName} ${req.user.lastName}`
+            note: `Attachment added: ${newAttachment.fileName}`,
+            author: loggedInUser.id,
+            authorName: `${loggedInUser.firstName} ${loggedInUser.lastName}`
         });
 
         await claim.save();
-        res.status(200).json({ success: true, data: claim.attachments });
-    } catch (error) { /* ... error handling ... */ }
+        res.status(200).json({ success: true, data: claim.attachments, message: 'Attachment added successfully.' });
+    } catch (error) {
+        console.error("Add Claim Attachment Error:", error);
+        if (error.message.includes("File upload only supports")) { // From our fileFilter
+            return res.status(400).json({ success: false, error: error.message });
+        }
+        res.status(500).json({ success: false, error: 'Server error adding attachment.' });
+    }
 };
 
 // @desc    Add a note to a claim

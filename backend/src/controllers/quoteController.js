@@ -1,7 +1,7 @@
 const Quote = require('../models/Quote');
 const Product = require('../models/Product'); // To fetch product details for snapshot
 const User = require('../models/User'); // To fetch customer email for notification
-const sendEmail = require('../utils/emailUtils'); // Import the email utility
+const { sendTemplatedEmail } = require('../utils/emailUtils'); // Updated import
 
 // @desc    Create a new quote
 // @route   POST /api/v1/quotes
@@ -230,19 +230,27 @@ exports.updateQuoteStatus = async (req, res, next) => {
     await quote.save();
 
     // Send notification email if quote is accepted
-    if (quote.status === 'Accepted' && quote.customer) {
+    // Send notification email if quote is accepted
+    if (quote.status === 'Accepted' && quote.customer) { // quote.customer should be populated with at least email and firstName
       try {
-        const customer = await User.findById(quote.customer);
-        if (customer && customer.email) {
-          await sendEmail({
-            to: customer.email,
-            subject: `Your Quote ${quote.quoteNumber} has been Accepted!`,
-            text: `Hi ${customer.firstName},\n\nGreat news! Your quote (Ref: ${quote.quoteNumber}) for product "${quote.productDetailsSnapshot.name}" with a premium of ${quote.calculatedPremium} ${quote.productDetailsSnapshot.currency} has been marked as Accepted.\n\nPlease proceed to the next steps for policy issuance if applicable.\n\nBest Regards,\nThe Insurance Platform Team`,
-            html: `<p>Hi ${customer.firstName},</p><p>Great news! Your quote (Ref: ${quote.quoteNumber}) for product "${quote.productDetailsSnapshot.name}" with a premium of ${quote.calculatedPremium} ${quote.productDetailsSnapshot.currency} has been marked as Accepted.</p><p>Please proceed to the next steps for policy issuance if applicable.</p><p>Best Regards,<br/>The Insurance Platform Team</p>`,
+        // const customer = await User.findById(quote.customer._id); // Not needed if quote.customer is populated properly
+        if (quote.customer && quote.customer.email) {
+          await sendTemplatedEmail({
+            to: quote.customer.email,
+            templateName: 'quoteAccepted', // This template needs to be created in the DB
+            dataContext: {
+              firstName: quote.customer.firstName,
+              quoteNumber: quote.quoteNumber,
+              productName: quote.productDetailsSnapshot.name,
+              premiumAmount: quote.calculatedPremium,
+              premiumCurrency: quote.productDetailsSnapshot.currency,
+              // Add other relevant details like a link to the quote or next steps
+              // quoteLink: `${process.env.FRONTEND_URL}/quotes/${quote._id}` // Example
+            },
           });
         }
       } catch (emailError) {
-        console.error(`Failed to send quote acceptance email for quote ${quote.quoteNumber}:`, emailError);
+        console.error(`Failed to send quote acceptance email for quote ${quote.quoteNumber}:`, emailError.message);
         // Do not fail the main operation if email sending fails, just log it.
       }
     }

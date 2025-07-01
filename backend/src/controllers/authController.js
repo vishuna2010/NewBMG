@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwtUtils');
-const sendEmail = require('../utils/emailUtils'); // Import the email utility
+const { sendTemplatedEmail } = require('../utils/emailUtils'); // Updated import
 
 // @desc    Register a new user (customer, agent, etc.)
 // @route   POST /api/v1/auth/register
@@ -36,16 +36,20 @@ exports.registerUser = async (req, res, next) => {
     const userData = user.toObject();
     delete userData.password;
 
-    // Send welcome email
+    // Send welcome email using a template
     try {
-      await sendEmail({
+      await sendTemplatedEmail({
         to: user.email,
-        subject: 'Welcome to Insurance Platform!',
-        text: `Hi ${user.firstName},\n\nWelcome to our platform! We're excited to have you.\n\nBest Regards,\nThe Insurance Platform Team`,
-        html: `<p>Hi ${user.firstName},</p><p>Welcome to our platform! We're excited to have you.</p><p>Best Regards,<br/>The Insurance Platform Team</p>`,
+        templateName: 'welcomeUser', // This template needs to be created in the DB by an admin
+        dataContext: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          // Add any other relevant data for the welcome email
+        },
       });
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
+      console.error(`Failed to send welcome email to ${user.email}:`, emailError.message);
       // Do not fail registration if email sending fails, just log it.
     }
 

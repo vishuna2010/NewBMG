@@ -10,7 +10,7 @@ const {
 } = require('../controllers/claimController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
-// const { handleFileUpload } = require('../middleware/fileUpload'); // Placeholder
+const { handleSingleUpload, handleMultipleUploads } = require('../middleware/fileUploadMiddleware');
 
 const router = express.Router();
 
@@ -19,8 +19,8 @@ router.use(protect); // Apply protect to all routes in this file by default
 
 router.route('/')
   // Authenticated users (customers, agents) can log new claims.
-  // If using multer for direct upload with FNOL: .post(handleFileUpload, logNewClaim)
-  .post(logNewClaim)
+  // Using handleMultipleUploads for 'initialAttachments' field, allowing up to 5 files.
+  .post(handleMultipleUploads('initialClaimAttachments', 5), logNewClaim)
   // Admins/staff/agents can see all claims (controllers will filter). Customers only their own (controller logic).
   .get(getAllClaims);
 
@@ -38,8 +38,8 @@ router.route('/:id/assign')
 
 router.route('/:id/attachments')
   // Owner, adjuster, or admin/staff can add attachments.
-  // If using multer for direct upload: .post(authorizeAccessToClaimOrAdjuster, handleFileUpload, addClaimAttachment)
-  .post(addClaimAttachment);
+  // Using handleSingleUpload for 'claimAttachment' field.
+  .post(handleSingleUpload('claimAttachment'), addClaimAttachment);
 
 router.route('/:id/notes')
   // Owner, adjuster, or admin/staff can add notes.

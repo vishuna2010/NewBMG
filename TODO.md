@@ -55,8 +55,8 @@
     *   [~] API: Log New Claim (FNOL) - *Basic implementation, attachment handling is placeholder for S3*
     *   [~] API: Track Claim Status - *Basic status update endpoint implemented; detailed workflow pending*
     *   [~] API: Assign Claims to adjusters/brokers - *Basic assignment endpoint implemented*
-    *   [~] API: S3 integration for claim attachments (upload & linking - Backend saves files locally and serves them via a new API. Full S3 integration for claims pending.) - *Model supports `fileUrl`, controller has placeholders, AWS SDK added.*
-    *   [~] API: Manage Claim Attachments - *Basic `addClaimAttachment` endpoint implemented (placeholder for S3)*
+    *   [~] API: S3 integration for claim attachments - *Backend setup for S3 (SDK, s3Handler, multer middleware, controller integration for upload) is complete. Actual file upload from client UI and full workflow (e.g. delete from S3) pending.*
+    *   [~] API: Manage Claim Attachments - *Basic `addClaimAttachment` endpoint implemented, now uses S3 for storage.*
     *   [~] API: Manage Claim Notes - *Basic `addClaimNote` endpoint implemented*
     *   [~] API: View/Search Claims - *Basic `getAllClaims` and `getClaimById` implemented; advanced search/filter pending*
     *   [ ] API: Generate Claim Reports (basic)
@@ -105,8 +105,11 @@
     *   [~] API: Implement Compliance Checks / Develop Regulatory Reporting (APIs to support Admin UI)
     *   [x] API: Manage Third-Party API Integrations (CRUD including Update)
     *   [~] API: Implement eSignature integration (backend part for request/status)
+    *   **Email Template Management (API):**
+        *   [x] API: Define EmailTemplate Model (MongoDB Schema)
+        *   [x] API: Admin CRUD for Email Templates (Create, Read, Update, Delete)
 *   **Integrations & Communications (Backend APIs):**
-    *   [~] API: Basic Email Notifications - Welcome & Quote Acceptance emails implemented (Nodemailer with Ethereal/env config).
+    *   [x] API: Templated Email Notifications - Welcome & Quote Acceptance emails refactored to use Email Templates. (Nodemailer with Ethereal/env config, emailUtils updated).
     *   [~] API: Implement Communication Module (Backend Stub & logic for storing/retrieving messages) - *No change this round*
     *   [~] API: Stripe Payment Gateway - Backend stub for creating Payment Intent implemented.
 *   **Operations & Management (Backend APIs):**

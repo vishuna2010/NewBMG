@@ -29,6 +29,7 @@ const policyRoutes = require('./routes/policyRoutes');
 const claimRoutes = require('./routes/claimRoutes');
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
 
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes); // Auth routes for register, login, me
@@ -38,6 +39,7 @@ app.use('/api/v1/quotes', quoteRoutes);
 app.use('/api/v1/policies', policyRoutes);
 app.use('/api/v1/claims', claimRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/email-templates', emailTemplateRoutes);
 
 
 // Example for future routes (to be expanded)
