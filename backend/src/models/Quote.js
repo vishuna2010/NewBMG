@@ -50,10 +50,15 @@ const QuoteSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    // Could add fields for who generated the quote if an agent/admin does it
-    // generatedBy: {
+    agentId: { // Link to the agent who created/manages this quote
+      type: mongoose.Schema.ObjectId,
+      ref: 'User', // References the User model, assuming agent has a 'agent' role
+      index: true, // Good for querying quotes by agent
+    }
+    // Could also add a generic 'createdBy' if admins/staff can also create quotes directly
+    // createdBy: {
     //   type: mongoose.Schema.ObjectId,
-    //   ref: 'User' // Staff/Admin/Agent user
+    //   ref: 'User'
     // }
   },
   {

@@ -79,6 +79,171 @@ exports.createPaymentIntent = async (req, res, next) => {
   }
 };
 
-// TODO: Add webhook handler for Stripe events (payment_intent.succeeded, payment_intent.payment_failed, etc.)
-// This is crucial for reliably updating order/payment status in your database.
-// exports.stripeWebhookHandler = (req, res) => { ... }
+const Policy = require('../models/Policy'); // Needed for updating policy status
+const { sendTemplatedEmail } = require('../utils/emailUtils'); // For payment confirmation email
+const User = require('../models/User'); // To fetch user details for email
+
+// @desc    Handle Stripe Webhooks
+// @route   POST /api/v1/payments/webhook
+// @access  Public (Webhook signature is used for verification)
+exports.stripeWebhookHandler = async (req, res) => {
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("Stripe webhook secret (STRIPE_WEBHOOK_SECRET) not configured.");
+    return res.status(500).send('Webhook secret not configured.');
+  }
+  if (!stripe || typeof stripe.webhooks.constructEvent !== 'function') {
+    console.error("Stripe SDK not properly initialized for webhooks.");
+    return res.status(500).send('Stripe SDK error for webhooks.');
+  }
+
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    // req.body needs to be the raw request body for signature verification
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error(`⚠️  Webhook signature verification failed: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntentSucceeded = event.data.object;
+      console.log('PaymentIntent succeeded:', paymentIntentSucceeded.id);
+      // Business logic for successful payment:
+      try {
+        // Example: Update policy status if policyId is in metadata
+        if (paymentIntentSucceeded.metadata && paymentIntentSucceeded.metadata.policyId) {
+          const policy = await Policy.findById(paymentIntentSucceeded.metadata.policyId);
+          if (policy && policy.status === 'PendingActivation') { // Or other relevant status
+            policy.status = 'Active';
+            // Add payment details to policy if needed (e.g., transaction ID, payment date)
+            // policy.payments = policy.payments || [];
+            // policy.payments.push({
+            //   stripePaymentIntentId: paymentIntentSucceeded.id,
+            //   amount: paymentIntentSucceeded.amount / 100, // convert from cents
+            //   currency: paymentIntentSucceeded.currency,
+            //   paymentDate: new Date(paymentIntentSucceeded.created * 1000) // Stripe timestamp is in seconds
+            // });
+            await policy.save();
+            console.log(`Policy ${policy.policyNumber} status updated to Active.`);
+
+            // Send payment confirmation email
+            if (policy.customer) {
+              const customer = await User.findById(policy.customer);
+              if (customer && customer.email) {
+                await sendTemplatedEmail({
+                  to: customer.email,
+                  templateName: 'paymentConfirmation', // Create this template
+                  dataContext: {
+                    firstName: customer.firstName,
+                    policyNumber: policy.policyNumber,
+                    amountPaid: (paymentIntentSucceeded.amount / 100).toFixed(2),
+                    currency: paymentIntentSucceeded.currency.toUpperCase(),
+                  }
+                }).catch(emailErr => console.error("Failed to send payment confirmation email:", emailErr));
+              }
+            }
+          } else if (policy) {
+            console.log(`Policy ${policy.policyNumber} already active or in different state: ${policy.status}. No status change from webhook for PI: ${paymentIntentSucceeded.id}`);
+          } else {
+             console.warn(`Policy not found for policyId: ${paymentIntentSucceeded.metadata.policyId} in PaymentIntent ${paymentIntentSucceeded.id}`);
+          }
+        } else {
+            console.log('PaymentIntent succeeded but no policyId in metadata:', paymentIntentSucceeded.id);
+        }
+        // TODO: Handle other scenarios, like generic order payments if not tied to a policy.
+      } catch (dbError) {
+        console.error('Error updating application state after payment success:', dbError);
+        // Optionally, you could return a 500 here to signal Stripe to retry (if applicable for your error)
+        // but be cautious with retries for database errors.
+      }
+      break;
+
+    case 'payment_intent.payment_failed':
+      const paymentIntentFailed = event.data.object;
+      console.log('PaymentIntent failed:', paymentIntentFailed.id, paymentIntentFailed.last_payment_error?.message);
+      // Business logic for failed payment:
+      // - Notify the customer
+      // - Update order/policy status to 'PaymentFailed' or similar
+      // - Log the error details
+      // Example:
+      // if (paymentIntentFailed.metadata && paymentIntentFailed.metadata.policyId) {
+      //    // ... find policy, update status, send email ...
+      // }
+      break;
+
+    // ... handle other event types as needed (e.g., charge.succeeded, invoice.payment_succeeded)
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  res.status(200).json({ received: true });
+};
+
+// @desc    Mock a Stripe event for local testing (DEVELOPMENT ONLY)
+// @route   POST /api/v1/payments/mock-stripe-event
+// @access  Development only (should be disabled or protected in production)
+exports.mockStripeEvent = async (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, error: 'This endpoint is not available in production.' });
+  }
+
+  const mockEvent = req.body; // Expects a mock Stripe event object in the request body
+
+  if (!mockEvent || !mockEvent.type || !mockEvent.data || !mockEvent.data.object) {
+    return res.status(400).json({ success: false, error: 'Invalid mock event structure.' });
+  }
+
+  console.log(`\n--- MOCK STRIPE EVENT RECEIVED (${mockEvent.type}) ---`);
+  // Simulate the core logic of stripeWebhookHandler for the given event type
+  // This bypasses signature verification and direct Stripe interaction.
+
+  try {
+    switch (mockEvent.type) {
+      case 'payment_intent.succeeded':
+        const paymentIntentSucceeded = mockEvent.data.object;
+        console.log('Mock PaymentIntent succeeded:', paymentIntentSucceeded.id);
+        if (paymentIntentSucceeded.metadata && paymentIntentSucceeded.metadata.policyId) {
+          const policy = await Policy.findById(paymentIntentSucceeded.metadata.policyId);
+          if (policy && policy.status === 'PendingActivation') {
+            policy.status = 'Active';
+            await policy.save();
+            console.log(`Mock: Policy ${policy.policyNumber} status updated to Active.`);
+            // Simulate sending email
+            if (policy.customer) {
+              const customer = await User.findById(policy.customer);
+              if (customer && customer.email) {
+                console.log(`Mock: Would send 'paymentConfirmation' email to ${customer.email}`);
+                // sendTemplatedEmail({ ... }) // Actual call can be made if Ethereal is set up
+              }
+            }
+          } else if(policy) {
+            console.log(`Mock: Policy ${policy.policyNumber} status is ${policy.status}, not PendingActivation. No change.`);
+          } else {
+            console.warn(`Mock: Policy not found for policyId: ${paymentIntentSucceeded.metadata.policyId}`);
+          }
+        } else {
+            console.log('Mock: PaymentIntent succeeded but no policyId in metadata:', paymentIntentSucceeded.id);
+        }
+        break;
+
+      case 'payment_intent.payment_failed':
+        const paymentIntentFailed = mockEvent.data.object;
+        console.log('Mock PaymentIntent failed:', paymentIntentFailed.id, paymentIntentFailed.last_payment_error?.message);
+        // Add mock logic for failed payment if needed for testing
+        break;
+
+      default:
+        console.log(`Mock: Unhandled event type ${mockEvent.type}`);
+    }
+    res.status(200).json({ success: true, message: `Mock event ${mockEvent.type} processed.` });
+  } catch (error) {
+    console.error("Error processing mock Stripe event:", error);
+    res.status(500).json({ success: false, error: `Error processing mock event: ${error.message}`});
+  }
+};

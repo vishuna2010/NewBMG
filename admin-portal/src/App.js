@@ -21,7 +21,10 @@ import UserEditPage from './pages/UserEditPage';
 import PolicyDetailPage from './pages/PolicyDetailPage';
 import QuotesListPage from './pages/QuotesListPage';
 import QuoteDetailPage from './pages/QuoteDetailPage';
-import ClaimDetailPage from './pages/ClaimDetailPage'; // Added ClaimDetailPage import
+import ClaimDetailPage from './pages/ClaimDetailPage';
+import EmailTemplatesListPage from './pages/EmailTemplatesListPage';
+import EmailTemplateCreatePage from './pages/EmailTemplateCreatePage';
+import EmailTemplateEditPage from './pages/EmailTemplateEditPage';
 
 function App() {
   // For now, assume authenticated and redirect to dashboard
@@ -55,6 +58,9 @@ function App() {
                   <Route path="communications" element={<CommunicationsPage />} />
                   <Route path="users" element={<UserManagementPage />} />
                   <Route path="users/edit/:id" element={<UserEditPage />} /> {/* Added route for editing a user */}
+                  <Route path="email-templates" element={<EmailTemplatesListPage />} />
+                  <Route path="email-templates/new" element={<EmailTemplateCreatePage />} />
+                  <Route path="email-templates/edit/:identifier" element={<EmailTemplateEditPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="profile" element={<AdminProfilePage />} />
                   <Route index element={<Navigate to="dashboard" />} /> {/* Default admin page */}

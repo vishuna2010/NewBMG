@@ -111,7 +111,7 @@
 *   **Integrations & Communications (Backend APIs):**
     *   [x] API: Templated Email Notifications - Welcome & Quote Acceptance emails refactored to use Email Templates. (Nodemailer with Ethereal/env config, emailUtils updated).
     *   [~] API: Implement Communication Module (Backend Stub & logic for storing/retrieving messages) - *No change this round*
-    *   [~] API: Stripe Payment Gateway - Backend stub for creating Payment Intent implemented.
+    *   [~] API: Stripe Payment Gateway - Backend stub for creating Payment Intent implemented. Includes Stripe Webhook Handler for `payment_intent.succeeded` & `payment_intent.payment_failed` (updates policy status, sends conceptual email) and a mock event trigger for local testing.
 *   **Operations & Management (Backend APIs):**
     *   [~] API: Implement Reporting & Dashboard (Admin dashboard summary API exists. Sales Report data fetching.)
     *   [ ] API: Implement Document Management (linking, metadata, access control - core file handling separate)
@@ -284,6 +284,11 @@
     *   [~] UI: Compliance Checks / Develop Regulatory Reporting (Admin UI pages created, connected to APIs - Placeholder page created).
     *   [x] UI: Manage Third-Party API Integrations (CRUD including Update - Placeholder page created).
     *   [~] UI: Implement eSignature integration (Admin UI for request/status exists - Placeholder page created).
+    *   **Email Template Management (Admin UI - `EmailTemplatesListPage.js`, `EmailTemplateCreatePage.js`, `EmailTemplateEditPage.js`):**
+        *   [~] UI: Email Template List page - *Basic list, create/edit/delete buttons implemented.*
+        *   [~] UI: Create Email Template page (with `EmailTemplateForm.js`) - *Form structure and create functionality implemented.*
+        *   [~] UI: Edit Email Template page (with `EmailTemplateForm.js`) - *Form structure, data loading, and update functionality implemented.*
+        *   [ ] UI: Review Email Template forms for styling, validation, and usability (e.g., HTML editor for body).
 *   **Operations & Management (Admin UI):**
     *   [~] UI: Implement Reporting & Dashboard (`ReportsPage.js` placeholder. Sales Report tabs use real policy data - future work).
     *   [~] UI: Implement Document Management (Admin UI for mock document management exists - needs a dedicated page or integration).

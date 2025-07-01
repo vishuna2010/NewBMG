@@ -54,21 +54,32 @@ exports.createQuote = async (req, res, next) => {
       // customerId will be added if provided and if user is authenticated and linked
     };
 
-    // Assign customer based on role and provided customerId
+    // Assign customer and/or agent based on role
     if (loggedInUser.role === 'customer') {
       quoteData.customer = loggedInUser.id;
-    } else if (customerId) { // For agent/admin creating for a specific customer
-      // TODO: Add validation here: an agent should only be able to create quotes for their assigned customers, or admin can do for any.
-      const customerExists = await User.findById(customerId);
-      if (!customerExists) {
-        return res.status(404).json({ success: false, error: `Customer with ID ${customerId} not found.` });
+    } else if (loggedInUser.role === 'agent') {
+      quoteData.agentId = loggedInUser.id;
+      if (customerId) {
+        // TODO: Validate if this agent is allowed to create a quote for this customerId.
+        // For now, we'll assume they can if the customerId is valid.
+        const customerExists = await User.findById(customerId);
+        if (!customerExists || customerExists.role !== 'customer') { // Ensure it's a customer
+          return res.status(404).json({ success: false, error: `Customer with ID ${customerId} not found or is not a customer.` });
+        }
+        quoteData.customer = customerId;
       }
-      quoteData.customer = customerId;
-    } else if (loggedInUser.role === 'agent' || loggedInUser.role === 'admin' || loggedInUser.role === 'staff') {
-      // If agent/admin/staff and no customerId, quote might be for a prospect (customer field remains null)
-      // Or, require customerId for agents/admins too if quotes must always be linked.
-      // For now, allow customer to be null if not a 'customer' role user and no customerId provided.
-      // This means anonymous quotes are possible if logged in user is not a customer.
+      // If no customerId, it's a quote for a prospect by an agent.
+    } else if (['admin', 'staff'].includes(loggedInUser.role)) {
+      // Admin/staff can create quotes for any customer or for prospects
+      if (customerId) {
+        const customerExists = await User.findById(customerId);
+         if (!customerExists || customerExists.role !== 'customer') {
+          return res.status(404).json({ success: false, error: `Customer with ID ${customerId} not found or is not a customer.` });
+        }
+        quoteData.customer = customerId;
+      }
+      // They could also be assigned as an "agent" on the quote if a mechanism exists, or a general createdBy field.
+      // For now, admin/staff created quotes won't have an agentId unless explicitly passed (which is not current logic).
     }
 
     // The pre-save hook in Quote.js will generate quoteNumber and set validUntil
@@ -99,28 +110,25 @@ exports.getAllQuotes = async (req, res, next) => {
     if (loggedInUser.role === 'customer') {
       queryFilters.customer = loggedInUser.id;
     } else if (loggedInUser.role === 'agent') {
-      // TODO: Agents might see quotes they created, or for customers they manage.
-      // This requires an `agentId` field on the Quote model or linking agents to customers.
-      // For now, an agent might see all customer quotes or be restricted like customers.
-      // Let's assume for now they see quotes linked to any customerId they might pass in query, or their own if they are also a customer.
-      // Or, if no specific filter, they might see a broader set if allowed by business rules (e.g. all quotes from their agency).
-      // For simplicity here, if agent and specific customerId in query, filter by that.
-      if (req.query.customerIdForAgent) {
-          queryFilters.customer = req.query.customerIdForAgent;
+      // Agents see quotes they created.
+      queryFilters.agentId = loggedInUser.id;
+      // If agent also wants to filter by a specific customer for their quotes:
+      if (req.query.customerId) {
+        queryFilters.customer = req.query.customerId;
       }
-      // If you want agents to only see quotes they are associated with (e.g. quoteData.agent = loggedInUser.id when creating)
-      // queryFilters.agent = loggedInUser.id;
     }
-    // Admins/staff can see all, or apply further filters from req.query
-    // (e.g., req.query.status, req.query.productId)
+    // Admins/staff can see all quotes unless they provide specific filters.
+    // Admin/staff can filter by any field passed in req.query that matches schema (e.g., status, productId, customerId, agentId)
+    if (['admin', 'staff'].includes(loggedInUser.role)) {
+        if (req.query.customerId) queryFilters.customer = req.query.customerId;
+        if (req.query.agentId) queryFilters.agentId = req.query.agentId;
+        // other admin-specific filters can be added from req.query
+    }
     if (req.query.status) queryFilters.status = req.query.status;
     if (req.query.productId) queryFilters.product = req.query.productId;
-    // If an admin specifically queries for a customerId, allow it
-    if ((loggedInUser.role === 'admin' || loggedInUser.role === 'staff') && req.query.customerId) {
-        queryFilters.customer = req.query.customerId;
-    }
 
-    const quotes = await Quote.find(queryFilters).populate('product', 'name productType').populate('customer', 'firstName lastName email');
+
+    const quotes = await Quote.find(queryFilters).populate('product', 'name productType').populate('customer', 'firstName lastName email').populate('agentId', 'firstName lastName email');
 
     res.status(200).json({
       success: true,
@@ -151,10 +159,18 @@ exports.getQuoteById = async (req, res, next) => {
     if (loggedInUser.role === 'customer' && (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)) {
       return res.status(403).json({ success: false, error: 'Not authorized to access this quote' });
     }
-    // TODO: Add agent authorization logic:
-    // if (loggedInUser.role === 'agent' && !isAgentAuthorizedForCustomer(loggedInUser.id, quote.customer._id)) {
-    //   return res.status(403).json({ success: false, error: 'Not authorized to access this quote' });
-    // }
+    // Agent authorization: Can view if they are the agent on the quote OR if it's for their customer (more complex check deferred)
+    if (loggedInUser.role === 'agent' &&
+        (!quote.agentId || quote.agentId.toString() !== loggedInUser.id) &&
+        (!quote.customer || quote.customer._id.toString() !== loggedInUser.id) /* agent might also be customer */
+    ) {
+      // TODO: More complex agent logic: if quote.customer is one of agent's managed customers.
+      // For now, simple check: if agent created it OR if it's a quote for themselves (as a customer).
+      // If neither, and they are not admin/staff, then deny.
+      if (!(quote.agentId && quote.agentId.toString() === loggedInUser.id)) {
+         return res.status(403).json({ success: false, error: 'Agent not authorized for this quote unless directly linked or owner.' });
+      }
+    }
     // Admin/staff can access any quote.
 
     res.status(200).json({
@@ -206,18 +222,31 @@ exports.updateQuoteStatus = async (req, res, next) => {
         return res.status(400).json({ success: false, error: `Customers cannot change status from '${quote.status}' to '${status}'.` });
       }
     } else if (loggedInUser.role === 'agent') {
-      // TODO: Agent specific logic: Can they update status for their customer's quotes?
-      // For now, let's assume an agent has similar permissions to admin for status changes for simplicity,
-      // but this should be refined based on business rules.
-      if (!adminAllowedStatuses.includes(status)) {
-         return res.status(400).json({ success: false, error: `Invalid status value: ${status}.`});
+      // Agent can update status if they are linked to the quote via agentId
+      if (!quote.agentId || quote.agentId.toString() !== loggedInUser.id) {
+        // As a fallback, allow agent to update if they are also the customer on this quote (edge case)
+        if (!quote.customer || quote.customer._id.toString() !== loggedInUser.id) {
+            return res.status(403).json({ success: false, error: 'Agent not authorized to update this quote status unless linked or owner.' });
+        }
+        // If agent is also customer, apply customer transition rules
+        const allowedTransitionsForCustomer = customerAllowedTransitions[quote.status];
+        if (!allowedTransitionsForCustomer || !allowedTransitionsForCustomer.includes(status)) {
+            return res.status(400).json({ success: false, error: `User (as customer) cannot change status from '${quote.status}' to '${status}'.` });
+        }
+      } else {
+        // Agent is linked, apply admin-like allowed statuses for now
+        // TODO: Define specific agent allowed status transitions if different from admin
+        if (!adminAllowedStatuses.includes(status)) {
+           return res.status(400).json({ success: false, error: `Invalid status value '${status}' for agent.`});
+        }
       }
     } else if (loggedInUser.role === 'admin' || loggedInUser.role === 'staff') {
       if (!adminAllowedStatuses.includes(status)) {
-         return res.status(400).json({ success: false, error: `Invalid status value: ${status}.`});
+         return res.status(400).json({ success: false, error: `Invalid status value '${status}' for admin/staff.`});
       }
     } else {
-      return res.status(403).json({ success: false, error: 'Not authorized to update quote status.' });
+      // Should not happen if 'protect' middleware is effective
+      return res.status(403).json({ success: false, error: 'Not authorized to update quote status due to unknown role.' });
     }
 
     quote.status = status;

@@ -82,6 +82,11 @@ const PolicySchema = new mongoose.Schema(
     //   cancelledOn: Date,
     //   refundAmount: Number
     // }
+    agentId: { // Link to the agent associated with this policy (e.g., who sold it or manages it)
+      type: mongoose.Schema.ObjectId,
+      ref: 'User', // References the User model
+      index: true,
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt

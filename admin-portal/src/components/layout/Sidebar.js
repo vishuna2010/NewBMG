@@ -16,6 +16,7 @@ const Sidebar = () => {
     { path: "/admin/communications", name: "Communication" },
     { path: "/admin/users", name: "User Management" }, // For staff/brokers
     // { path: "/admin/documents", name: "Documents" }, // General doc repo, might be integrated elsewhere
+    { path: "/admin/email-templates", name: "Email Templates" },
     { path: "/admin/settings", name: "Settings" },
   ];
 

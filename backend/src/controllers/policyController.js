@@ -15,7 +15,8 @@ exports.createPolicyFromQuote = async (req, res, next) => {
   }
 
   try {
-    const quote = await Quote.findById(quoteId).populate('product').populate('customer');
+    // Populate agentId on the quote as well, if it exists
+    const quote = await Quote.findById(quoteId).populate('product').populate('customer').populate('agentId');
 
     if (!quote) {
       return res.status(404).json({ success: false, error: `Quote not found with id ${quoteId}` });
@@ -25,12 +26,19 @@ exports.createPolicyFromQuote = async (req, res, next) => {
       return res.status(400).json({ success: false, error: `Quote status must be 'Accepted' to create a policy. Current status: ${quote.status}` });
     }
 
-    // Authorization: Ensure the logged-in user is authorized to convert this quote
-    // (e.g., they are the customer on the quote, or an admin/agent with permission)
-    if (loggedInUser.role === 'customer' && (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)) {
+    // Authorization:
+    let authorizedToConvert = false;
+    if (loggedInUser.role === 'customer' && quote.customer && quote.customer._id.toString() === loggedInUser.id) {
+        authorizedToConvert = true;
+    } else if (loggedInUser.role === 'agent' && quote.agentId && quote.agentId._id.toString() === loggedInUser.id) {
+        authorizedToConvert = true;
+    } else if (['admin', 'staff'].includes(loggedInUser.role)) {
+        authorizedToConvert = true;
+    }
+
+    if (!authorizedToConvert) {
         return res.status(403).json({ success: false, error: 'Not authorized to convert this quote to a policy.' });
     }
-    // TODO: Add more specific agent authorization if needed (e.g., agent can only convert quotes for their customers)
 
     // Check if a policy already exists for this quote
     const existingPolicy = await Policy.findOne({ originalQuote: quoteId });
@@ -61,9 +69,10 @@ exports.createPolicyFromQuote = async (req, res, next) => {
       status: 'PendingActivation', // Or 'Active' if payment is assumed/handled elsewhere
       effectiveDate,
       expiryDate,
-      term: policyTerm, // Example term
+      term: policyTerm,
       paymentSchedule: 'Annual', // Example, should ideally come from quote/product
-      // documents: [] // Initialize or add initial documents like quote PDF
+      agentId: quote.agentId ? quote.agentId._id : undefined, // Carry over agentId from quote
+      // documents: []
     };
 
     const newPolicy = await Policy.create(policyData);
@@ -98,36 +107,45 @@ exports.createPolicyFromQuote = async (req, res, next) => {
 // @access  Private (Role-dependent filtering)
 exports.getAllPolicies = async (req, res, next) => {
   try {
-    let queryFilters = { ...req.query }; // Copy query params for admin filtering
+    let queryFilters = {}; // Start with empty filters
     const loggedInUser = req.user;
+
+    // Apply base filters from query parameters first (for admin/staff)
+    // These can be overridden by role-specific logic below if necessary
+    const allowedAdminFilters = ['status', 'productId', 'customerId', 'agentId'];
+    allowedAdminFilters.forEach(key => {
+        if (req.query[key]) {
+            queryFilters[key] = req.query[key];
+        }
+    });
 
     if (loggedInUser.role === 'customer') {
       queryFilters.customer = loggedInUser.id;
+      // Customer should not be able to filter by other customerId or agentId
+      delete queryFilters.customerId;
+      delete queryFilters.agentId;
     } else if (loggedInUser.role === 'agent') {
-      // TODO: Agent-specific filtering (e.g., policies for their customers)
-      // For now, if an agent queries for a specific customer, allow it.
-      // Otherwise, they might see all or be restricted like customers.
-      // This logic needs refinement based on business rules for agents.
-      if (req.query.customerIdForAgent) {
-        queryFilters.customer = req.query.customerIdForAgent;
+      queryFilters.agentId = loggedInUser.id;
+      // Agent sees policies linked to them. They can further filter by customerId if provided.
+      if (req.query.customerId) { // Agent explicitly filtering for a customer within their policies
+        queryFilters.customer = req.query.customerId;
       } else {
-        // Default for agent: maybe only policies linked to them if such a link exists, or error.
-        // For now, let's prevent agent from seeing all policies unless a specific filter is applied.
-        // This part needs a clearer business rule for agents.
-        // queryFilters.agent = loggedInUser.id; // If policies are linked to agents
+        delete queryFilters.customerId; // Prevent accidental broad customer search if not specified
       }
     }
-    // Admin/staff can see all policies or apply filters from req.query
+    // Admin/staff can use any of the allowedAdminFilters passed in req.query.
+    // No specific override needed here as queryFilters already contains them if provided.
 
-    // Remove pagination/sort params from queryFilters if they are handled separately by a middleware or utility
-    delete queryFilters.page;
-    delete queryFilters.limit;
-    delete queryFilters.sort;
+    // Remove pagination/sort params from queryFilters as they are typically handled by separate logic/middleware
+    if (req.query.page) delete queryFilters.page;
+    if (req.query.limit) delete queryFilters.limit;
+    if (req.query.sort) delete queryFilters.sort;
 
     const policies = await Policy.find(queryFilters)
       .populate('customer', 'firstName lastName email')
       .populate('product', 'name productType')
-      .populate('originalQuote', 'quoteNumber calculatedPremium');
+      .populate('originalQuote', 'quoteNumber calculatedPremium')
+      .populate('agentId', 'firstName lastName email'); // Populate agent details
 
     res.status(200).json({
       success: true,
@@ -161,7 +179,16 @@ exports.getPolicyById = async (req, res, next) => {
     if (loggedInUser.role === 'customer' && (!policy.customer || policy.customer._id.toString() !== loggedInUser.id)) {
       return res.status(403).json({ success: false, error: 'Not authorized to access this policy' });
     }
-    // TODO: Add agent authorization logic (e.g., agent can view policies of their customers)
+    if (loggedInUser.role === 'agent' &&
+        (!policy.agentId || policy.agentId.toString() !== loggedInUser.id) &&
+        (!policy.customer || policy.customer._id.toString() !== loggedInUser.id) /* agent might also be customer */
+    ) {
+      // TODO: More complex agent logic: if policy.customer is one of agent's managed customers.
+      // For now, simple check: if agent is linked to policy OR if it's a policy for themselves (as a customer).
+      if (!(policy.agentId && policy.agentId.toString() === loggedInUser.id)) {
+         return res.status(403).json({ success: false, error: 'Agent not authorized for this policy unless directly linked or owner.' });
+      }
+    }
     // Admin/staff can access any policy.
 
     res.status(200).json({ success: true, data: policy });
