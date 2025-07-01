@@ -19,6 +19,8 @@ import ProductCreatePage from './pages/ProductCreatePage';
 import ProductEditPage from './pages/ProductEditPage';
 import UserEditPage from './pages/UserEditPage';
 import PolicyDetailPage from './pages/PolicyDetailPage';
+import QuotesListPage from './pages/QuotesListPage';
+import QuoteDetailPage from './pages/QuoteDetailPage';
 
 function App() {
   // For now, assume authenticated and redirect to dashboard
@@ -39,6 +41,8 @@ function App() {
                   {/* <Route path="customers" element={<CustomersPage />} />  // Removed, merged into /users */}
                   <Route path="policies" element={<PoliciesPage />} />
                   <Route path="policies/:id" element={<PolicyDetailPage />} /> {/* Added route for policy details */}
+                  <Route path="quotes" element={<QuotesListPage />} /> {/* Added route for quotes list */}
+                  <Route path="quotes/:id" element={<QuoteDetailPage />} /> {/* Added route for quote details */}
                   <Route path="claims" element={<ClaimsPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="products/new" element={<ProductCreatePage />} />

@@ -258,9 +258,12 @@
     *   [~] UI: List page (`pages/admin/agents.vue` - path to be `AgentsPage.js`) refactored for theme consistency. -> See User Management UI
 *   **Claims Workflow Management (`ClaimsPage.js` & potential sub-components):**
     *   [~] UI: Status updates, etc., including viewing attachments (Placeholder page created).
-*   **Quote Management (Could be part of `QuotesPage.js` or a new `AdminQuotesPage.js`):**
-    *   [~] UI: Admin UI for comprehensive quote management (may need review/enhancement)
-    *   [~] UI: Admin/client access to generated PDF quotes (needs review) - *Admin part*
+*   **Quote Management (Admin UI - `QuotesListPage.js`, `QuoteDetailPage.js`):**
+    *   [~] UI: Quote List page (`QuotesListPage.js`) - *Basic list with links to details implemented.*
+    *   [~] UI: Quote Detail page (`QuoteDetailPage.js`) - *Displays comprehensive quote info, allows status updates & conversion to policy.*
+    *   [ ] UI: Admin ability to create new quotes (if different from customer/agent flow).
+    *   [~] UI: Admin access to generated PDF quotes (needs review) - *Display link/button if PDF exists on quote detail.*
+    *   [ ] UI: Review Quote pages for styling consistency and advanced filtering/actions.
 *   **Policy Management (Admin UI - `PoliciesPage.js`, `PolicyDetailPage.js`):**
     *   [~] UI: Policy List page (`PoliciesPage.js`) - *Basic list with links to details implemented.*
     *   [~] UI: Policy Detail page (`PolicyDetailPage.js`) - *Displays comprehensive policy info, allows status updates.*

@@ -6,6 +6,7 @@ const Sidebar = () => {
   const menuItems = [
     { path: "/admin/dashboard", name: "Dashboard" },
     // { path: "/admin/customers", name: "Customers" }, // Merged into User Management
+    { path: "/admin/quotes", name: "Quotes" },
     { path: "/admin/policies", name: "Policies" },
     { path: "/admin/claims", name: "Claims" },
     { path: "/admin/products", name: "Products" },
