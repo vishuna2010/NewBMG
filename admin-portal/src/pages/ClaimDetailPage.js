@@ -29,8 +29,10 @@ const ClaimDetailPage = () => {
   const [submittingNote, setSubmittingNote] = useState(false);
 
   // For adding attachments (conceptual: assumes URL is provided)
-  // const [newAttachment, setNewAttachment] = useState({ fileName: '', fileUrl: '', description: '' });
-  // const [submittingAttachment, setSubmittingAttachment] = useState(false);
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [attachmentDescription, setAttachmentDescription] = useState('');
+  const [submittingAttachment, setSubmittingAttachment] = useState(false);
+  const [submittingAttachmentDelete, setSubmittingAttachmentDelete] = useState(null); // Stores ID of attachment being deleted
 
 
   const claimStatuses = ['Open', 'UnderReview', 'InformationRequested', 'Approved', 'PartiallyApproved', 'Rejected', 'Closed', 'Paid', 'Withdrawn'];
@@ -99,6 +101,27 @@ const ClaimDetailPage = () => {
     }
   };
 
+  const handleDeleteAttachment = async (attachmentIdToDel) => {
+    if (!attachmentIdToDel) {
+        alert("Attachment ID is missing.");
+        return;
+    }
+    if (window.confirm('Are you sure you want to delete this attachment?')) {
+        setSubmittingAttachmentDelete(attachmentIdToDel);
+        setError(null);
+        try {
+            await deleteClaimAttachment(claimId, attachmentIdToDel);
+            alert('Attachment deleted successfully!');
+            fetchClaimDetails(); // Refresh to update the attachment list
+        } catch (err) {
+            setError(err.message);
+            alert(`Failed to delete attachment: ${err.message}`);
+        } finally {
+            setSubmittingAttachmentDelete(null);
+        }
+    }
+  };
+
   const handleAssignAdjuster = async (e) => {
     e.preventDefault();
     if (!adjusterId) {
@@ -147,8 +170,33 @@ const ClaimDetailPage = () => {
     }
   };
 
-  // TODO: handleAddAttachment function similar to handleAddNote if direct URL input is used,
-  // or more complex logic if actual file upload from this page is implemented.
+  const handleFileChange = (e) => {
+    setAttachmentFile(e.target.files[0]);
+  };
+
+  const handleAddAttachment = async (e) => {
+    e.preventDefault();
+    if (!attachmentFile) {
+      alert("Please select a file to upload.");
+      return;
+    }
+    setSubmittingAttachment(true);
+    setError(null);
+    try {
+      // The service function `addClaimAttachment` now expects a File object
+      await addClaimAttachment(claimId, attachmentFile, attachmentDescription);
+      alert('Attachment uploaded successfully!');
+      setAttachmentFile(null); // Clear the file input
+      setAttachmentDescription(''); // Clear description
+      document.getElementById('attachment-file-input').value = null; // Reset file input visually
+      fetchClaimDetails(); // Refresh claim details to show new attachment
+    } catch (err) {
+      setError(err.message);
+      alert(`Error uploading attachment: ${err.message}`);
+    } finally {
+      setSubmittingAttachment(false);
+    }
+  };
 
   if (loading) return <p>Loading claim details...</p>;
   if (error && !claim) return <p style={{ color: 'red' }}>Error: {error}</p>;
@@ -258,21 +306,48 @@ const ClaimDetailPage = () => {
 
             <section style={sectionStyle}>
               <h3>Attachments</h3>
-              {/* TODO: Implement actual file upload UI if admin can upload from here */}
               {claim.attachments && claim.attachments.length > 0 ? (
                 <ul style={{listStyle: 'none', paddingLeft: 0}}>
-                  {claim.attachments.map((doc, index) => (
-                    <li key={index} style={{border: '1px solid #eee', padding: '10px', marginBottom: '5px', borderRadius: '4px'}}>
-                      <strong>{doc.fileName}</strong> {doc.description ? `(${doc.description})` : ''}
-                      <br />
-                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">View/Download</a>
-                      {/* TODO: Delete attachment option */}
+                  {claim.attachments.map((doc) => ( // Use doc._id if available and unique, otherwise fileUrl
+                    <li key={doc._id || doc.fileUrl} style={{border: '1px solid #eee', padding: '10px', marginBottom: '5px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <div>
+                        <strong>{doc.fileName}</strong> {doc.description ? `(${doc.description})` : ''}
+                        <br />
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" style={{fontSize: '0.9em', color: '#007bff'}}>View/Download</a>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteAttachment(doc._id)} // Assuming doc._id is the attachment's ID in the array
+                        style={{color: 'red', background: 'none', border: '1px solid red', padding: '3px 8px', cursor: 'pointer', fontSize: '0.8em', borderRadius: '3px'}}
+                        disabled={submittingAttachmentDelete === doc._id} // Disable specific button during its delete operation
+                      >
+                        {submittingAttachmentDelete === doc._id ? 'Deleting...' : 'Delete'}
+                      </button>
                     </li>
                   ))}
                 </ul>
               ) : <p>No documents uploaded for this claim yet.</p>}
-              {/* Placeholder for adding attachment via URL (if that's a flow)
-              <form onSubmit={handleAddAttachment}> ... fields for fileName, fileUrl, description ... </form> */}
+
+              <form onSubmit={handleAddAttachment} style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                <h4>Upload New Attachment</h4>
+                <div>
+                  <label htmlFor="attachmentFile" style={labelStyle}>File:</label>
+                  <input type="file" id="attachment-file-input" name="attachmentFile" onChange={handleFileChange} required style={{display: 'block', marginBottom: '10px'}}/>
+                </div>
+                <div>
+                  <label htmlFor="attachmentDescription" style={labelStyle}>Description (optional):</label>
+                  <input
+                    type="text"
+                    id="attachmentDescription"
+                    name="attachmentDescription"
+                    value={attachmentDescription}
+                    onChange={(e) => setAttachmentDescription(e.target.value)}
+                    style={{width: 'calc(100% - 12px)', padding: '5px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px'}}
+                  />
+                </div>
+                <button type="submit" disabled={submittingAttachment || !attachmentFile} style={{fontSize: '0.9em', padding: '5px 10px'}}>
+                  {submittingAttachment ? 'Uploading...' : 'Upload Attachment'}
+                </button>
+              </form>
             </section>
 
             <section>

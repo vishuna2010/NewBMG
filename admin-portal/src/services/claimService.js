@@ -90,20 +90,37 @@ export const addClaimNote = async (id, noteData) => { // e.g., { note: 'Customer
   return handleResponse(response);
 };
 
-// Add an attachment to a claim (placeholder - assumes URL is pre-generated or file handled by other means)
-// For actual file upload from frontend, this would be more complex (e.g., using FormData)
-export const addClaimAttachment = async (id, attachmentData) => { // e.g., { fileName: 'photo.jpg', fileUrl: 's3_or_other_url', fileType: 'image/jpeg', description: 'Photo of damage' }
+// Add an attachment to a claim by uploading a file
+export const addClaimAttachment = async (id, file, description = '') => {
   // const token = getToken();
+  const formData = new FormData();
+  formData.append('claimAttachment', file); // 'claimAttachment' must match the fieldName in multer middleware on backend
+  if (description) {
+    formData.append('description', description);
+  }
+
   const response = await fetch(`${API_BASE_URL}/claims/${id}/attachments`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      // 'Content-Type': 'multipart/form-data' is set automatically by browser when using FormData
       // 'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify(attachmentData),
+    body: formData,
   });
   return handleResponse(response);
 };
 
 // Optional: If admin needs to delete a claim (use with caution)
 // export const deleteClaim = async (id) => { ... }
+
+// Delete a specific attachment from a claim
+export const deleteClaimAttachment = async (claimId, attachmentId) => {
+  // const token = getToken();
+  const response = await fetch(`${API_BASE_URL}/claims/${claimId}/attachments/${attachmentId}`, {
+    method: 'DELETE',
+    headers: {
+      // 'Authorization': `Bearer ${token}`,
+    },
+  });
+  return handleResponse(response); // Expects 200 with data or 204
+};

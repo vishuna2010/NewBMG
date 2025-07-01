@@ -1,7 +1,7 @@
 const Claim = require('../models/Claim');
 const Policy = require('../models/Policy');
 const User = require('../models/User'); // For adjuster role check and author name
-const { uploadToS3 /*, deleteFromS3 */ } = require('../utils/s3Handler'); // Import S3 utility
+const { uploadToS3, deleteFromS3 } = require('../utils/s3Handler'); // Import S3 utility
 
 // Note: File upload middleware (e.g., using multer) should be applied at the route level
 // before these controller actions if files are part of the request.
@@ -401,4 +401,82 @@ exports.addClaimNote = async (req, res, next) => {
 
         res.status(200).json({ success: true, data: populatedClaim.notes });
     } catch (error) { /* ... error handling ... */ }
+};
+
+// @desc    Delete an attachment from a claim
+// @route   DELETE /api/v1/claims/:claimId/attachments/:attachmentId
+// @access  Private (User associated with claim, Adjuster, Admin/Staff - who added it or admin)
+exports.deleteClaimAttachment = async (req, res, next) => {
+    const { claimId, attachmentId } = req.params;
+    const loggedInUser = req.user;
+
+    try {
+        const claim = await Claim.findById(claimId);
+        if (!claim) {
+            return res.status(404).json({ success: false, error: `Claim not found with id ${claimId}` });
+        }
+
+        const attachment = claim.attachments.id(attachmentId); // Find subdocument by its _id
+        if (!attachment) {
+            return res.status(404).json({ success: false, error: `Attachment not found with id ${attachmentId}` });
+        }
+
+        // Authorization: Only admin/staff or perhaps the user who uploaded it (if we stored uploaderId on attachment)
+        // For simplicity, let's allow admin/staff, or the claim customer, or assigned adjuster.
+        const isCustomer = loggedInUser.role === 'customer' && claim.customer.toString() === loggedInUser.id;
+        const isAdjuster = claim.adjuster && claim.adjuster.toString() === loggedInUser.id;
+        const isAdminOrStaff = ['admin', 'staff'].includes(loggedInUser.role);
+
+        if (!isAdminOrStaff && !isCustomer && !isAdjuster) { // Simplified: if not admin/staff, then customer or adjuster for this claim
+             return res.status(403).json({ success: false, error: 'Not authorized to delete this attachment.' });
+        }
+
+        // Attempt to delete from S3
+        try {
+            // Extract the file key from the S3 URL.
+            // This assumes the URL is a standard S3 path like https://bucket-name.s3.region.amazonaws.com/key
+            // Or just the key if you store the key directly instead of the full URL.
+            // For this example, let's assume fileUrl is the full S3 URL.
+            const urlParts = new URL(attachment.fileUrl);
+            let fileKey = decodeURIComponent(urlParts.pathname.substring(1)); // Remove leading '/' and decode
+
+            // If your bucket name is part of the path in a virtual-hosted–style URL (e.g., mybucket.s3.amazonaws.com/object-key)
+            // and your S3 client is configured for that bucket, the key should not include the bucket name.
+            // If process.env.AWS_S3_BUCKET_NAME is defined and the URL path starts with it, remove it.
+            if (process.env.AWS_S3_BUCKET_NAME && fileKey.startsWith(process.env.AWS_S3_BUCKET_NAME + '/')) {
+                fileKey = fileKey.substring((process.env.AWS_S3_BUCKET_NAME + '/').length);
+            }
+
+            if (fileKey) {
+                await deleteFromS3(fileKey);
+                console.log(`Successfully deleted ${fileKey} from S3.`);
+            } else {
+                console.warn(`Could not determine S3 file key from URL: ${attachment.fileUrl}. File not deleted from S3.`);
+            }
+        } catch (s3Error) {
+            console.error(`S3 Deletion Error for ${attachment.fileUrl}:`, s3Error);
+            // Decide if failure to delete from S3 should prevent DB record removal.
+            // For now, we'll log the error and proceed with DB removal.
+            // Could add a flag to the attachment in DB like 'pendingS3Deletion' if critical.
+        }
+
+        // Pull the subdocument from the array
+        claim.attachments.pull({ _id: attachmentId });
+
+        claim.notes.push({
+            note: `Attachment deleted: ${attachment.fileName}`,
+            author: loggedInUser.id,
+            authorName: `${loggedInUser.firstName} ${loggedInUser.lastName}`
+        });
+
+        await claim.save();
+        res.status(200).json({ success: true, data: claim.attachments, message: 'Attachment deleted successfully.' });
+
+    } catch (error) {
+        console.error("Delete Claim Attachment Error:", error);
+        if (error.name === 'CastError') { // For invalid claimId or attachmentId format
+             return res.status(400).json({ success: false, error: 'Invalid ID format for claim or attachment.' });
+        }
+        res.status(500).json({ success: false, error: 'Server error deleting attachment.' });
+    }
 };

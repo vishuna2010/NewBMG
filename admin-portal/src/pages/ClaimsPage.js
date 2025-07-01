@@ -40,27 +40,66 @@ const ClaimsPage = () => {
 
   // const handleFilterSubmit = (e) => {
   //   e.preventDefault();
-  //   fetchClaims(); // Already handled by useEffect on filters change
+  //   // fetchClaims(); // Not needed here as useEffect handles it based on filters state change
   // };
+
+  const clearFilters = () => {
+    setFilters({ status: '', policyId: '', customerId: '' });
+  };
 
 
   if (loading) return <p>Loading claims...</p>;
-  if (error && claims.length === 0) return <p style={{ color: 'red' }}>Error fetching claims: {error}</p>;
+  // Show error prominently if claims list is empty due to it
+  if (error && claims.length === 0) return (
+    <div>
+        <h1 className="page-title">Claims Management</h1>
+        <div className="content-wrapper">
+            <p style={{ color: 'red' }}>Error fetching claims: {error}</p>
+        </div>
+    </div>
+  );
+
+  // Basic styling for filter inputs
+  const filterInputStyle = { marginRight: '10px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' };
+  const filterButtonStyle = { padding: '8px 12px', borderRadius: '4px', border: 'none', backgroundColor: '#007bff', color: 'white', cursor: 'pointer', marginRight: '5px' };
+
 
   return (
     <div>
       <h1 className="page-title">Claims Management</h1>
       <div className="content-wrapper">
-        {/* TODO: Add Filter UI controls that update the 'filters' state */}
-        {/* <form onSubmit={handleFilterSubmit} style={{ marginBottom: '20px' }}>
-          <input type="text" name="status" placeholder="Filter by Status" value={filters.status} onChange={handleFilterChange} />
-          <input type="text" name="policyId" placeholder="Filter by Policy ID" value={filters.policyId} onChange={handleFilterChange} />
-          <button type="submit">Filter</button>
-        </form> */}
-        <p style={{fontStyle: 'italic', marginBottom: '20px'}}>Basic filtering via query params is supported by the backend. UI for filters can be added here.</p>
+        <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #eee', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+          <h4>Filter Claims</h4>
+          <input
+            type="text"
+            name="status"
+            placeholder="Status (e.g., Open)"
+            value={filters.status}
+            onChange={handleFilterChange}
+            style={filterInputStyle}
+          />
+          <input
+            type="text"
+            name="policyId"
+            placeholder="Policy ID"
+            value={filters.policyId}
+            onChange={handleFilterChange}
+            style={filterInputStyle}
+          />
+          <input
+            type="text"
+            name="customerId"
+            placeholder="Customer ID"
+            value={filters.customerId}
+            onChange={handleFilterChange}
+            style={filterInputStyle}
+          />
+          {/* The button is not strictly necessary if useEffect refetches on filter change */}
+          {/* <button type="button" onClick={fetchClaims} style={filterButtonStyle}>Apply Filters</button> */}
+          <button type="button" onClick={clearFilters} style={{...filterButtonStyle, backgroundColor: '#6c757d' }}>Clear Filters</button>
+        </div>
 
-
-        {error && <p style={{ color: 'red', marginBottom: '10px' }}>Operation failed: {error}</p>}
+        {error && <p style={{ color: 'red', marginBottom: '10px' }}>Error during operation: {error}</p>}
 
         {claims.length === 0 && !loading ? (
           <p>No claims found.</p>

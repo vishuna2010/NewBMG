@@ -55,8 +55,8 @@
     *   [~] API: Log New Claim (FNOL) - *Basic implementation, attachment handling is placeholder for S3*
     *   [~] API: Track Claim Status - *Basic status update endpoint implemented; detailed workflow pending*
     *   [~] API: Assign Claims to adjusters/brokers - *Basic assignment endpoint implemented*
-    *   [~] API: S3 integration for claim attachments - *Backend setup for S3 (SDK, s3Handler, multer middleware, controller integration for upload) is complete. Actual file upload from client UI and full workflow (e.g. delete from S3) pending.*
-    *   [~] API: Manage Claim Attachments - *Basic `addClaimAttachment` endpoint implemented, now uses S3 for storage.*
+    *   [~] API: S3 integration for claim attachments - *Backend setup for S3 (SDK, s3Handler, multer middleware, controller integration for upload and delete) is complete. Actual file upload from client UI and full workflow pending.*
+    *   [~] API: Manage Claim Attachments - *Basic `addClaimAttachment` (S3 upload) and `deleteClaimAttachment` (S3 delete + DB record) endpoints implemented.*
     *   [~] API: Manage Claim Notes - *Basic `addClaimNote` endpoint implemented*
     *   [~] API: View/Search Claims - *Basic `getAllClaims` and `getClaimById` implemented; advanced search/filter pending*
     *   [ ] API: Generate Claim Reports (basic)
@@ -260,9 +260,9 @@
     *   [x] UI: Phase 1b: Admin UI for Agent Creation & Management (Full CRUD - Placeholder implies this, actual page `AgentsPage.js` to be created if distinct from UserManagementPage). -> See User Management UI
     *   [~] UI: List page (`pages/admin/agents.vue` - path to be `AgentsPage.js`) refactored for theme consistency. -> See User Management UI
 *   **Claims Management (Admin UI - `ClaimsPage.js`, `ClaimDetailPage.js`):**
-    *   [~] UI: Claim List page (`ClaimsPage.js`) - *Basic list with links to details implemented.*
-    *   [~] UI: Claim Detail page (`ClaimDetailPage.js`) - *Displays comprehensive claim info, allows status updates, adjuster assignment, and adding notes.*
-    *   [ ] UI: Manage Claim Attachments (add/view/delete) on detail page - *Basic view exists, add/delete UI pending.*
+    *   [~] UI: Claim List page (`ClaimsPage.js`) - *Enhanced with basic filter UI controls and styling.*
+    *   [~] UI: Claim Detail page (`ClaimDetailPage.js`) - *Displays comprehensive claim info, allows status updates, adjuster assignment, adding notes, and basic file upload UI for S3 (via service).*
+    *   [~] UI: Manage Claim Attachments (add/view/delete) on detail page - *Basic view, S3 upload UI, and DB record deletion UI implemented. S3 file deletion from backend is now implemented.*
     *   [ ] UI: Review Claim pages for styling consistency and advanced filtering/actions.
 *   **Quote Management (Admin UI - `QuotesListPage.js`, `QuoteDetailPage.js`):**
     *   [~] UI: Quote List page (`QuotesListPage.js`) - *Basic list with links to details implemented.*

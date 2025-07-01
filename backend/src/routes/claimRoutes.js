@@ -7,6 +7,7 @@ const {
   assignClaimToAdjuster,
   addClaimAttachment,
   addClaimNote,
+  deleteClaimAttachment, // Added deleteClaimAttachment
 } = require('../controllers/claimController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -40,6 +41,10 @@ router.route('/:id/attachments')
   // Owner, adjuster, or admin/staff can add attachments.
   // Using handleSingleUpload for 'claimAttachment' field.
   .post(handleSingleUpload('claimAttachment'), addClaimAttachment);
+
+router.route('/:claimId/attachments/:attachmentId')
+    .delete(deleteClaimAttachment); // DELETE /api/v1/claims/:claimId/attachments/:attachmentId
+                                  // protect is already applied to all claim routes
 
 router.route('/:id/notes')
   // Owner, adjuster, or admin/staff can add notes.
