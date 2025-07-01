@@ -5,9 +5,10 @@ const Product = require('../models/Product');   // May not be strictly needed he
 
 // @desc    Create a new policy from an accepted quote
 // @route   POST /api/v1/policies/from-quote
-// @access  Private (TODO: Add auth - e.g., customer or admin/agent)
+// @access  Private (Authenticated User - customer, agent, or admin acting on behalf)
 exports.createPolicyFromQuote = async (req, res, next) => {
   const { quoteId } = req.body;
+  const loggedInUser = req.user; // Set by 'protect' middleware
 
   if (!quoteId) {
     return res.status(400).json({ success: false, error: 'Quote ID is required' });
@@ -23,6 +24,13 @@ exports.createPolicyFromQuote = async (req, res, next) => {
     if (quote.status !== 'Accepted') {
       return res.status(400).json({ success: false, error: `Quote status must be 'Accepted' to create a policy. Current status: ${quote.status}` });
     }
+
+    // Authorization: Ensure the logged-in user is authorized to convert this quote
+    // (e.g., they are the customer on the quote, or an admin/agent with permission)
+    if (loggedInUser.role === 'customer' && (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)) {
+        return res.status(403).json({ success: false, error: 'Not authorized to convert this quote to a policy.' });
+    }
+    // TODO: Add more specific agent authorization if needed (e.g., agent can only convert quotes for their customers)
 
     // Check if a policy already exists for this quote
     const existingPolicy = await Policy.findOne({ originalQuote: quoteId });
@@ -87,11 +95,36 @@ exports.createPolicyFromQuote = async (req, res, next) => {
 
 // @desc    Get all policies
 // @route   GET /api/v1/policies
-// @access  Private (Admin/Agent) - TODO: Add auth middleware
+// @access  Private (Role-dependent filtering)
 exports.getAllPolicies = async (req, res, next) => {
   try {
-    // TODO: Implement filtering (by customer, status, product, dates) and pagination
-    const policies = await Policy.find(req.query) // Basic filtering via query params
+    let queryFilters = { ...req.query }; // Copy query params for admin filtering
+    const loggedInUser = req.user;
+
+    if (loggedInUser.role === 'customer') {
+      queryFilters.customer = loggedInUser.id;
+    } else if (loggedInUser.role === 'agent') {
+      // TODO: Agent-specific filtering (e.g., policies for their customers)
+      // For now, if an agent queries for a specific customer, allow it.
+      // Otherwise, they might see all or be restricted like customers.
+      // This logic needs refinement based on business rules for agents.
+      if (req.query.customerIdForAgent) {
+        queryFilters.customer = req.query.customerIdForAgent;
+      } else {
+        // Default for agent: maybe only policies linked to them if such a link exists, or error.
+        // For now, let's prevent agent from seeing all policies unless a specific filter is applied.
+        // This part needs a clearer business rule for agents.
+        // queryFilters.agent = loggedInUser.id; // If policies are linked to agents
+      }
+    }
+    // Admin/staff can see all policies or apply filters from req.query
+
+    // Remove pagination/sort params from queryFilters if they are handled separately by a middleware or utility
+    delete queryFilters.page;
+    delete queryFilters.limit;
+    delete queryFilters.sort;
+
+    const policies = await Policy.find(queryFilters)
       .populate('customer', 'firstName lastName email')
       .populate('product', 'name productType')
       .populate('originalQuote', 'quoteNumber calculatedPremium');
@@ -108,13 +141,13 @@ exports.getAllPolicies = async (req, res, next) => {
 
 // @desc    Get a single policy by ID
 // @route   GET /api/v1/policies/:id
-// @access  Private (Admin/Agent or Customer owner) - TODO: Add auth middleware
+// @access  Private (Owner, Agent for their customers, Admin/Staff)
 exports.getPolicyById = async (req, res, next) => {
   try {
     const policy = await Policy.findById(req.params.id)
-      .populate('customer')
-      .populate('product')
-      .populate('originalQuote');
+      .populate('customer', 'firstName lastName email') // Be specific with populated fields
+      .populate('product', 'name productType')
+      .populate('originalQuote', 'quoteNumber status');
 
     if (!policy) {
       return res.status(404).json({
@@ -122,7 +155,15 @@ exports.getPolicyById = async (req, res, next) => {
         error: `Policy not found with id of ${req.params.id}`,
       });
     }
-    // TODO: Authorization: Check if user is admin or owner of the policy
+
+    const loggedInUser = req.user;
+    // Authorization check:
+    if (loggedInUser.role === 'customer' && (!policy.customer || policy.customer._id.toString() !== loggedInUser.id)) {
+      return res.status(403).json({ success: false, error: 'Not authorized to access this policy' });
+    }
+    // TODO: Add agent authorization logic (e.g., agent can view policies of their customers)
+    // Admin/staff can access any policy.
+
     res.status(200).json({ success: true, data: policy });
   } catch (error) {
     if (error.name === 'CastError') {

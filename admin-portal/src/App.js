@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './components/layout/MainLayout';
 import './App.css';
 import AdminDashboardPage from './pages/AdminDashboardPage';
-import CustomersPage from './pages/CustomersPage';
+// import CustomersPage from './pages/CustomersPage'; // Removed as it's merged into UserManagementPage
 import PoliciesPage from './pages/PoliciesPage';
 import ClaimsPage from './pages/ClaimsPage';
 import ProductsPage from './pages/ProductsPage';
@@ -21,6 +21,7 @@ import UserEditPage from './pages/UserEditPage';
 import PolicyDetailPage from './pages/PolicyDetailPage';
 import QuotesListPage from './pages/QuotesListPage';
 import QuoteDetailPage from './pages/QuoteDetailPage';
+import ClaimDetailPage from './pages/ClaimDetailPage'; // Added ClaimDetailPage import
 
 function App() {
   // For now, assume authenticated and redirect to dashboard
@@ -43,7 +44,8 @@ function App() {
                   <Route path="policies/:id" element={<PolicyDetailPage />} /> {/* Added route for policy details */}
                   <Route path="quotes" element={<QuotesListPage />} /> {/* Added route for quotes list */}
                   <Route path="quotes/:id" element={<QuoteDetailPage />} /> {/* Added route for quote details */}
-                  <Route path="claims" element={<ClaimsPage />} />
+                  <Route path="claims" element={<ClaimsPage />} /> {/* This is the Claims List Page */}
+                  <Route path="claims/:id" element={<ClaimDetailPage />} /> {/* Added route for claim details */}
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="products/new" element={<ProductCreatePage />} />
                   <Route path="products/edit/:id" element={<ProductEditPage />} />

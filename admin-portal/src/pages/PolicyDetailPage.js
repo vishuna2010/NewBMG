@@ -4,7 +4,7 @@ import { getPolicyById, updatePolicy } from '../services/policyService'; // Assu
 
 const PolicyDetailPage = () => {
   const { id: policyId } = useParams();
-  const navigate = (path) => window.location.href = path; // Basic navigation for now
+  // const navigate = (path) => window.location.href = path; // Basic navigation for now - unused, can use useNavigate if needed
 
   const [policy, setPolicy] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ const PolicyDetailPage = () => {
 
   useEffect(() => {
     fetchPolicy();
-  }, [policyId]);
+  }, [policyId, fetchPolicy]); // Added fetchPolicy
 
   const handleStatusUpdate = async (e) => {
     e.preventDefault();

@@ -28,6 +28,7 @@ exports.logNewClaim = async (req, res, next) => {
   // or we'll just create the claim without attachments initially and add them via another endpoint.
 
   const { policyId, dateOfLoss, descriptionOfLoss, estimatedLossAmount, currency, initialAttachments } = req.body;
+  const loggedInUser = req.user; // Set by 'protect' middleware
 
   if (!policyId || !dateOfLoss || !descriptionOfLoss) {
     return res.status(400).json({ success: false, error: 'Please provide policyId, dateOfLoss, and descriptionOfLoss' });
@@ -39,22 +40,26 @@ exports.logNewClaim = async (req, res, next) => {
       return res.status(404).json({ success: false, error: `Policy not found with id ${policyId}` });
     }
 
-    // TODO: Verify that the person reporting the claim is authorized for this policy (e.g., policyholder)
+    // Authorization: Verify that the person reporting the claim is authorized for this policy
+    if (loggedInUser.role === 'customer' && policy.customer._id.toString() !== loggedInUser.id) {
+        return res.status(403).json({ success: false, error: 'Not authorized to report a claim for this policy.' });
+    }
+    // TODO: Add agent authorization logic if agents can report claims for their customers.
 
     const claimData = {
       policy: policy._id,
-      customer: policy.customer._id, // Denormalize customer ID
-      product: policy.product._id,   // Denormalize product ID for context
+      customer: policy.customer._id,
+      product: policy.product._id,
       dateOfLoss,
       descriptionOfLoss,
-      status: 'Open', // Initial status
+      status: 'Open',
       estimatedLossAmount,
       currency: currency || policy.premiumCurrency || 'USD',
-      attachments: [], // Will be populated below if initialAttachments are provided or via S3 logic
-      notes: [{ // Initial note
-        note: `Claim reported by customer (or system). Description: ${descriptionOfLoss}`,
-        // author: req.user.id, // If authenticated user
-        authorName: policy.customer.firstName ? `${policy.customer.firstName} ${policy.customer.lastName}` : 'System/Customer', // Placeholder
+      attachments: [],
+      notes: [{
+        note: `Claim reported. Description: ${descriptionOfLoss}`,
+        author: loggedInUser.id,
+        authorName: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
       }]
     };
 
@@ -101,20 +106,34 @@ exports.logNewClaim = async (req, res, next) => {
 
 // @desc    Get all claims (with filtering)
 // @route   GET /api/v1/claims
-// @access  Private (Admin, Agent, or Customer for their own) - TODO: Add auth & filtering
+// @access  Private (Role-dependent filtering)
 exports.getAllClaims = async (req, res, next) => {
   try {
-    let query = Claim.find();
+    let queryFilters = { ...req.query }; // Copy query params for admin filtering
+    const loggedInUser = req.user;
 
-    // TODO: Based on user role (req.user from auth middleware):
-    // if (req.user.role === 'customer') query = query.where('customer').equals(req.user.id);
-    // else if (req.user.role === 'agent') query = query.where('adjuster').equals(req.user.id); // Or based on policies they manage
+    if (loggedInUser.role === 'customer') {
+      queryFilters.customer = loggedInUser.id;
+    } else if (loggedInUser.role === 'agent') {
+      // TODO: Agent-specific filtering (e.g., claims for their customers or policies they manage)
+      // For now, an agent might be restricted like a customer or see claims they are assigned as adjuster.
+      // queryFilters.adjuster = loggedInUser.id; // Example: if agent is an adjuster
+      // Or, if agent is linked to customers, filter by those customer IDs.
+      // This needs more defined business logic for agent's scope.
+      // For simplicity, let's say an agent for now can only see claims they are assigned to as adjuster.
+      // This means if they are not an adjuster on any claim, they see none by default via this.
+      queryFilters.adjuster = loggedInUser.id;
+    }
+    // Admin/staff can see all claims or apply further filters from req.query
+    // (e.g., req.query.status, req.query.policyId)
+    // If an admin specifically queries for a customerId, it's already handled by queryFilters spread.
 
-    // Example basic filtering from query params
-    if (req.query.status) query = query.where('status').equals(req.query.status);
-    if (req.query.policyId) query = query.where('policy').equals(req.query.policyId);
-    if (req.query.customerId) query = query.where('customer').equals(req.query.customerId);
+    // Remove pagination/sort params from queryFilters if they are handled separately
+    delete queryFilters.page;
+    delete queryFilters.limit;
+    delete queryFilters.sort;
 
+    let query = Claim.find(queryFilters);
 
     query = query.populate('policy', 'policyNumber')
                  .populate('customer', 'firstName lastName email')
@@ -135,21 +154,35 @@ exports.getAllClaims = async (req, res, next) => {
 
 // @desc    Get a single claim by ID
 // @route   GET /api/v1/claims/:id
-// @access  Private - TODO: Add auth (owner, adjuster, admin)
+// @access  Private (Owner, Adjuster, Admin/Staff)
 exports.getClaimById = async (req, res, next) => {
   try {
     const claim = await Claim.findById(req.params.id)
-      .populate('policy')
-      .populate('customer')
-      .populate('product')
+      .populate('policy', 'policyNumber')
+      .populate('customer', 'firstName lastName email')
+      .populate('product', 'name productType')
       .populate('adjuster', 'firstName lastName email')
-      .populate('notes.author', 'firstName lastName');
-
+      .populate('notes.author', 'firstName lastName email'); // Added email to author populate
 
     if (!claim) {
       return res.status(404).json({ success: false, error: `Claim not found with id ${req.params.id}` });
     }
-    // TODO: Authorization check
+
+    const loggedInUser = req.user;
+    // Authorization check:
+    if (loggedInUser.role === 'customer' && (!claim.customer || claim.customer._id.toString() !== loggedInUser.id)) {
+      return res.status(403).json({ success: false, error: 'Not authorized to access this claim' });
+    }
+    if (loggedInUser.role === 'agent' && (!claim.adjuster || claim.adjuster._id.toString() !== loggedInUser.id)) {
+      // This assumes agent's access is only if they are the assigned adjuster.
+      // More complex logic might be needed if agents can see all claims for their customers.
+      // A quick check for customer ownership if agent is also the customer on the claim (edge case)
+      if (!claim.customer || claim.customer._id.toString() !== loggedInUser.id) {
+         return res.status(403).json({ success: false, error: 'Not authorized to access this claim as agent/adjuster' });
+      }
+    }
+    // Admin/staff can access any claim.
+
     res.status(200).json({ success: true, data: claim });
   } catch (error) {
     if (error.name === 'CastError') {
@@ -161,10 +194,12 @@ exports.getClaimById = async (req, res, next) => {
 
 // @desc    Update claim status
 // @route   PUT /api/v1/claims/:id/status
-// @access  Private (Admin, Adjuster) - TODO: Add auth
+// @access  Private (Admin, Adjuster/Staff)
 exports.updateClaimStatus = async (req, res, next) => {
   try {
-    const { status, note, authorName } = req.body; // authorName for now, should be req.user
+    const { status, note } = req.body;
+    const loggedInUser = req.user;
+
     if (!status) {
       return res.status(400).json({ success: false, error: 'Status is required' });
     }
@@ -174,23 +209,22 @@ exports.updateClaimStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, error: `Claim not found with id ${req.params.id}` });
     }
 
-    // TODO: Add more sophisticated status transition logic if needed
+    // Authorization: Only admin, staff, or assigned adjuster can update status (adjuster might have limited status changes)
+    if (!(loggedInUser.role === 'admin' || loggedInUser.role === 'staff' ||
+        (loggedInUser.role === 'agent' && claim.adjuster && claim.adjuster.toString() === loggedInUser.id))) {
+        return res.status(403).json({ success: false, error: 'Not authorized to update status for this claim.' });
+    }
+    // TODO: Add more sophisticated status transition logic based on current status and user role.
+
     const oldStatus = claim.status;
     claim.status = status;
 
-    if (note) {
-        claim.notes.push({
-            note: `Status changed from ${oldStatus} to ${status}. ${note}`,
-            // author: req.user.id,
-            authorName: authorName || 'System Update'
-        });
-    } else {
-         claim.notes.push({
-            note: `Status changed from ${oldStatus} to ${status}.`,
-            // author: req.user.id,
-            authorName: authorName || 'System Update'
-        });
-    }
+    const noteText = note ? `Status changed from ${oldStatus} to ${status}. ${note}` : `Status changed from ${oldStatus} to ${status}.`;
+    claim.notes.push({
+        note: noteText,
+        author: loggedInUser.id,
+        authorName: `${loggedInUser.firstName} ${loggedInUser.lastName}`
+    });
 
     // If status is 'Approved' or 'Paid', update relevant amount fields
     if (status === 'Approved' && req.body.approvedAmount !== undefined) {
@@ -208,12 +242,12 @@ exports.updateClaimStatus = async (req, res, next) => {
   } catch (error) { /* ... error handling (similar to other updates) ... */ }
 };
 
-// @desc    Assign an adjuster to a claim
-// @route   PUT /api/v1/claims/:id/assign
-// @access  Private (Admin) - TODO: Add auth
+// @access  Private (Admin/Staff)
 exports.assignClaimToAdjuster = async (req, res, next) => {
   try {
-    const { adjusterId, note, authorName } = req.body; // authorName for now, should be req.user
+    const { adjusterId, note } = req.body;
+    const loggedInUser = req.user;
+
     if (!adjusterId) {
       return res.status(400).json({ success: false, error: 'Adjuster ID is required' });
     }
@@ -223,22 +257,19 @@ exports.assignClaimToAdjuster = async (req, res, next) => {
       return res.status(404).json({ success: false, error: `Claim not found with id ${req.params.id}` });
     }
 
-    // TODO: Verify adjusterId is a valid User with 'adjuster' or similar role
+    // TODO: Verify adjusterId is a valid User with 'agent' or 'staff' role suitable for adjusting.
+    const adjusterUser = await User.findById(adjusterId);
+    if (!adjusterUser || !['agent', 'staff', 'admin'].includes(adjusterUser.role)) { // Example role check
+        return res.status(400).json({ success: false, error: 'Invalid Adjuster ID or user is not an eligible adjuster.' });
+    }
 
     claim.adjuster = adjusterId;
-     if (note) {
-        claim.notes.push({
-            note: `Claim assigned to adjuster ${adjusterId}. ${note}`,
-            // author: req.user.id,
-            authorName: authorName || 'System Update'
-        });
-    } else {
-         claim.notes.push({
-            note: `Claim assigned to adjuster ${adjusterId}.`,
-            // author: req.user.id,
-            authorName: authorName || 'System Update'
-        });
-    }
+    const noteText = note ? `Claim assigned to adjuster ${adjusterUser.firstName} ${adjusterUser.lastName} (${adjusterId}). ${note}` : `Claim assigned to adjuster ${adjusterUser.firstName} ${adjusterUser.lastName} (${adjusterId}).`;
+    claim.notes.push({
+        note: noteText,
+        author: loggedInUser.id,
+        authorName: `${loggedInUser.firstName} ${loggedInUser.lastName}`
+    });
 
     await claim.save();
     const populatedClaim = await Claim.findById(claim._id).populate('adjuster', 'firstName lastName email');
@@ -280,8 +311,8 @@ exports.addClaimAttachment = async (req, res, next) => {
 
         claim.notes.push({
             note: `Attachment added: ${fileName}`,
-            // author: req.user.id,
-            authorName: 'System/User' // Placeholder
+            author: req.user.id, // Assuming req.user is populated by protect middleware
+            authorName: `${req.user.firstName} ${req.user.lastName}`
         });
 
         await claim.save();
@@ -291,10 +322,10 @@ exports.addClaimAttachment = async (req, res, next) => {
 
 // @desc    Add a note to a claim
 // @route   POST /api/v1/claims/:id/notes
-// @access  Private - TODO: Add auth
+// @access  Private (User associated with claim, Adjuster, Admin/Staff)
 exports.addClaimNote = async (req, res, next) => {
-    const { note, authorName } = req.body; // authorName for now, should be req.user.name or similar
-    // const authorId = req.user.id; // From auth middleware
+    const { note } = req.body;
+    const loggedInUser = req.user;
 
     if (!note) {
         return res.status(400).json({ success: false, error: 'Note content is required.' });
@@ -306,10 +337,19 @@ exports.addClaimNote = async (req, res, next) => {
             return res.status(404).json({ success: false, error: `Claim not found with id ${req.params.id}` });
         }
 
+        // Authorization: Check if user is customer, assigned adjuster, or admin/staff
+        const isCustomer = loggedInUser.role === 'customer' && claim.customer.toString() === loggedInUser.id;
+        const isAdjuster = claim.adjuster && claim.adjuster.toString() === loggedInUser.id;
+        const isAdminOrStaff = ['admin', 'staff'].includes(loggedInUser.role);
+
+        if (!isCustomer && !isAdjuster && !isAdminOrStaff) {
+            return res.status(403).json({ success: false, error: 'Not authorized to add a note to this claim.' });
+        }
+
         const newNote = {
             note,
-            // author: authorId,
-            authorName: authorName || 'User' // Placeholder
+            author: loggedInUser.id,
+            authorName: `${loggedInUser.firstName} ${loggedInUser.lastName}`
         };
         claim.notes.push(newNote);
 

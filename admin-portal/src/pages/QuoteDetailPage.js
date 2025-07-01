@@ -44,7 +44,7 @@ const QuoteDetailPage = () => {
 
   useEffect(() => {
     fetchQuote();
-  }, [quoteId]);
+  }, [quoteId, fetchQuote]); // Added fetchQuote
 
   const handleStatusUpdate = async (e) => {
     e.preventDefault();

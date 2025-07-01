@@ -94,9 +94,9 @@
     *   [ ] API: Implement Logout functionality (e.g., token invalidation if using blocklist, or client-side removal)
     *   [ ] API: Create Staff/Broker Accounts (specific admin endpoint if different from generic user creation with role)
     *   [x] Refactor: Rename customerController.js to userController.js and customerRoutes.js to userRoutes.js.
-    *   [ ] API: Controller Logic - Implement `req.user` based filtering/ownership checks in `quoteController.js` (getAllQuotes, getQuoteById, updateQuoteStatus).
-    *   [ ] API: Controller Logic - Implement `req.user` based filtering/ownership checks in `policyController.js` (getAllPolicies, getPolicyById).
-    *   [ ] API: Controller Logic - Implement `req.user` based filtering/ownership/authorship checks in `claimController.js` (logNewClaim notes, getAllClaims, getClaimById, addClaimNote author).
+    *   [~] API: Controller Logic - Implement `req.user` based filtering/ownership checks in `quoteController.js` (createQuote, getAllQuotes, getQuoteById, updateQuoteStatus). - *Initial logic implemented.*
+    *   [~] API: Controller Logic - Implement `req.user` based filtering/ownership checks in `policyController.js` (createPolicyFromQuote, getAllPolicies, getPolicyById). - *Initial logic implemented.*
+    *   [~] API: Controller Logic - Implement `req.user` based filtering/ownership/authorship checks in `claimController.js` (logNewClaim, getAllClaims, getClaimById, updateClaimStatus, assignClaimToAdjuster, addClaimAttachment, addClaimNote). - *Initial logic implemented.*
 *   **Settings & Configuration (Backend APIs):**
     *   [x] API: Implement system settings (Phase 1: Backend Model & APIs)
     *   [~] API: Implement Email settings (Nodemailer configured, .env setup needed by user for specific service like Mailtrap/Gmail).
@@ -180,8 +180,8 @@
     *   [x] UI: Quick Action buttons - *Placeholder content exists*
     *   [ ] UI: Pending actions (general, if not covered by cards)
 *   **My Profile (`ProfilePage.js`):**
-    *   [x] UI: View/Update personal information (name/email) - *Placeholder content exists*
-    *   [x] UI: Change password - *Placeholder content exists*
+    *   [~] UI: View/Update personal information (name, email, phone, address, DOB) - *Fetches from API, allows updates, basic form implemented.*
+    *   [ ] UI: Change password - *Placeholder button exists, functionality not implemented.*
     *   [ ] UI: Manage communication preferences
 *   **My Policies (`UserPoliciesPage.js`):**
     *   [ ] UI: List policies
@@ -256,8 +256,11 @@
 *   **Agent Management (`pages/admin/agents/` - needs specific page like `AgentsPage.js`):** -> Merged into User Management UI
     *   [x] UI: Phase 1b: Admin UI for Agent Creation & Management (Full CRUD - Placeholder implies this, actual page `AgentsPage.js` to be created if distinct from UserManagementPage). -> See User Management UI
     *   [~] UI: List page (`pages/admin/agents.vue` - path to be `AgentsPage.js`) refactored for theme consistency. -> See User Management UI
-*   **Claims Workflow Management (`ClaimsPage.js` & potential sub-components):**
-    *   [~] UI: Status updates, etc., including viewing attachments (Placeholder page created).
+*   **Claims Management (Admin UI - `ClaimsPage.js`, `ClaimDetailPage.js`):**
+    *   [~] UI: Claim List page (`ClaimsPage.js`) - *Basic list with links to details implemented.*
+    *   [~] UI: Claim Detail page (`ClaimDetailPage.js`) - *Displays comprehensive claim info, allows status updates, adjuster assignment, and adding notes.*
+    *   [ ] UI: Manage Claim Attachments (add/view/delete) on detail page - *Basic view exists, add/delete UI pending.*
+    *   [ ] UI: Review Claim pages for styling consistency and advanced filtering/actions.
 *   **Quote Management (Admin UI - `QuotesListPage.js`, `QuoteDetailPage.js`):**
     *   [~] UI: Quote List page (`QuotesListPage.js`) - *Basic list with links to details implemented.*
     *   [~] UI: Quote Detail page (`QuoteDetailPage.js`) - *Displays comprehensive quote info, allows status updates & conversion to policy.*
