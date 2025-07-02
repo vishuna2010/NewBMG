@@ -240,8 +240,8 @@
 ## IV. Admin Portal Frontend Tasks (`admin-portal/` - React)
 *(Note: Original TODO had Vue paths; tasks are adapted for React where UI is implied)*
 *   **Authentication & Layout:**
-    *   [~] UI: Admin Portal: Implement Login Page UI & Basic Logic (`LoginPage.js` UI enhanced with AntD, basic submit logic calls authService)
-    *   [ ] UI: Admin Portal: Create AuthContext & AuthProvider (for token storage, user state, redirect)
+    *   [x] UI: Admin Portal: Implement Login Page UI & Basic Logic (`LoginPage.js` UI enhanced with AntD, basic submit logic calls authService, context integration done for login and redirect)
+    *   [~] UI: Admin Portal: Create AuthContext & AuthProvider (AuthProvider created, login/logout implemented, initial load logic for token check, wrapped App)
     *   [ ] UI: Admin Portal: Implement Protected Routes (using AuthContext)
     *   [ ] UI: Admin Portal: Update Services to Send Auth Token (from AuthContext)
     *   [ ] UI: Admin Portal: Implement Logout (clearing AuthContext & token)

@@ -3,12 +3,15 @@ import ReactDOM from 'react-dom/client';
 import 'antd/dist/reset.css'; // Import Ant Design CSS reset (for v5+)
 import './index.css'; // Your custom global styles should come after library styles
 import App from './App';
+import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 // import reportWebVitals from './reportWebVitals'; // Can be added if needed
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </React.StrictMode>
 );
 

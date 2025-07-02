@@ -1,35 +1,39 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { Form, Input, Button, Typography, Alert, Row, Col, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { login as loginService } from '../services/authService';
-// We'll add useNavigate later
+// No longer need loginService directly, will use login from useAuth
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 const { Title } = Typography;
 
 const LoginPage = () => {
-  const [form] = Form.useForm(); // AntD Form hook
+  const [form] = Form.useForm();
+  const { login: contextLogin } = useAuth(); // Get login function from AuthContext, aliased to avoid name clash
+  const navigate = useNavigate(); // Hook for navigation
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // const navigate = useNavigate();
-  // const { login } = useAuth(); // Assuming an AuthContext
 
   const onFinish = async (values) => {
     setError('');
     setLoading(true);
     try {
-      const response = await loginService(values.email, values.password);
-      if (response.success && response.token) {
-        console.log('Login successful!');
-        console.log('Token:', response.token);
-        console.log('User data:', response.data);
-        alert('Login successful! Token logged to console. User data: ' + JSON.stringify(response.data));
-        // navigate('/admin/dashboard'); // Placeholder for future redirect
+      // Call the login function from AuthContext
+      // This function now handles token storage and setting isAuthenticated state
+      const response = await contextLogin(values.email, values.password);
+
+      if (response && response.success) { // Check if response itself is defined and successful
+        console.log('Login successful via AuthContext!');
+        // AuthContext's login function handles token storage and setting user state.
+        // Now, navigate to the dashboard.
+        navigate('/admin/dashboard'); // Navigate to dashboard (or intended admin home)
       } else {
-        setError(response.error || 'Login failed. Please check credentials.');
+        // This else block might not be strictly necessary if contextLogin always throws on failure.
+        // However, it's good for robustness if contextLogin could return a non-error failure.
+        setError(response?.error || 'Login failed. Please check credentials.');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login page error:', err);
       setError(err.message || 'Failed to login. An unexpected error occurred.');
     } finally {
       setLoading(false);
