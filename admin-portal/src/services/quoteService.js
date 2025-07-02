@@ -78,3 +78,19 @@ export const updateQuoteStatus = async (id, statusUpdateData) => { // statusUpda
 //   }
 //   return { success: true, message: 'Quote deleted successfully' };
 // };
+
+// Generate PDF for a quote and get its S3 URL
+export const generateQuotePdf = async (id) => {
+  // const token = getToken(); // Token will be used when auth is wired up
+  const response = await fetch(`${API_BASE_URL}/quotes/${id}/generate-pdf`, {
+    method: 'POST',
+    headers: {
+      // 'Authorization': `Bearer ${token}`,
+      // No 'Content-Type': 'application/json' needed if no body is sent,
+      // or if it's implicitly handled by the backend for this specific endpoint.
+      // If the backend expects it, add 'Content-Type': 'application/json'.
+    },
+    // body: JSON.stringify({}), // Send empty JSON object if backend expects a body for POST
+  });
+  return handleResponse(response); // Expected response: { success: true, message: '...', data: { quotePdfUrl: '...' } }
+};

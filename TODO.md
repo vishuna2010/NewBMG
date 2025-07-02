@@ -266,9 +266,9 @@
     *   [ ] UI: Review Claim pages for styling consistency and advanced filtering/actions.
 *   **Quote Management (Admin UI - `QuotesListPage.js`, `QuoteDetailPage.js`):**
     *   [~] UI: Quote List page (`QuotesListPage.js`) - *Basic list with links to details implemented.*
-    *   [~] UI: Quote Detail page (`QuoteDetailPage.js`) - *Displays comprehensive quote info, allows status updates & conversion to policy.*
+    *   [x] UI: Quote Detail page (`QuoteDetailPage.js`) - *Displays comprehensive quote info, allows status updates, conversion to policy, and PDF generation/viewing.*
     *   [ ] UI: Admin ability to create new quotes (if different from customer/agent flow).
-    *   [~] UI: Admin access to generated PDF quotes (needs review) - *Display link/button if PDF exists on quote detail.*
+    *   [x] UI: Admin access to generated PDF quotes - *Button to generate/re-generate PDF and link to view existing PDF implemented on detail page.*
     *   [ ] UI: Review Quote pages for styling consistency and advanced filtering/actions.
 *   **Policy Management (Admin UI - `PoliciesPage.js`, `PolicyDetailPage.js`):**
     *   [~] UI: Policy List page (`PoliciesPage.js`) - *Basic list with links to details implemented.*

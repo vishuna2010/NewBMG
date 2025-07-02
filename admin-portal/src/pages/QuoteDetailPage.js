@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getQuoteById, updateQuoteStatus } from '../services/quoteService';
+import { getQuoteById, updateQuoteStatus, generateQuotePdf } from '../services/quoteService'; // Added generateQuotePdf
 import { createPolicyFromQuote } from '../services/policyService'; // For "Convert to Policy"
 
 const QuoteDetailPage = () => {
@@ -14,12 +14,13 @@ const QuoteDetailPage = () => {
   const [newStatus, setNewStatus] = useState('');
   const [submittingStatus, setSubmittingStatus] = useState(false);
   const [submittingPolicy, setSubmittingPolicy] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false); // New state for PDF generation
 
   // Define statuses admin can typically set. 'Accepted' might have a different flow (e.g. customer accepts)
   // but admin might need to override or manually set it.
   const adminSettableStatuses = ['Draft', 'Quoted', 'Accepted', 'Rejected', 'Expired'];
 
-  const fetchQuote = async () => {
+  const fetchQuote = useCallback(async () => { // Wrapped in useCallback
     if (!quoteId) {
       setError("No quote ID provided.");
       setLoading(false);
@@ -40,11 +41,11 @@ const QuoteDetailPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [quoteId]); // Dependency for useCallback
 
   useEffect(() => {
     fetchQuote();
-  }, [quoteId, fetchQuote]); // Added fetchQuote
+  }, [fetchQuote]); // Use fetchQuote from useCallback
 
   const handleStatusUpdate = async (e) => {
     e.preventDefault();
@@ -64,6 +65,32 @@ const QuoteDetailPage = () => {
       alert(`Error updating status: ${err.message}`);
     } finally {
       setSubmittingStatus(false);
+    }
+  };
+
+  const handleGeneratePdf = async () => {
+    if (!quote || !quote._id) {
+      alert("Quote data is not available.");
+      return;
+    }
+    setGeneratingPdf(true);
+    setError(null);
+    try {
+      const response = await generateQuotePdf(quote._id);
+      if (response.success && response.data && response.data.quotePdfUrl) {
+        // Update the local quote state to include the new PDF URL
+        setQuote(prevQuote => ({ ...prevQuote, quotePdfUrl: response.data.quotePdfUrl }));
+        alert('Quote PDF generated successfully!');
+        // Optionally open the PDF in a new tab immediately
+        // window.open(response.data.quotePdfUrl, '_blank');
+      } else {
+        throw new Error(response.error || "Failed to generate PDF.");
+      }
+    } catch (err) {
+      setError(err.message);
+      alert(`Error generating PDF: ${err.message}`);
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -136,6 +163,19 @@ const QuoteDetailPage = () => {
             <div style={detailItemStyle}><span style={labelStyle}>Created At:</span> {new Date(quote.createdAt).toLocaleString()}</div>
             <div style={detailItemStyle}><span style={labelStyle}>Last Updated:</span> {new Date(quote.updatedAt).toLocaleString()}</div>
             {quote.notes && <div style={detailItemStyle}><span style={labelStyle}>Notes:</span> {quote.notes}</div>}
+
+            <div style={{...detailItemStyle, marginTop: '15px'}}>
+              <span style={labelStyle}>Quote PDF:</span>
+              {quote.quotePdfUrl ? (
+                <a href={quote.quotePdfUrl} target="_blank" rel="noopener noreferrer" style={{marginRight: '10px'}}>View PDF</a>
+              ) : (
+                <span>No PDF generated yet. </span>
+              )}
+              <button onClick={handleGeneratePdf} disabled={generatingPdf || quote.status === 'ConvertedToPolicy'} style={{fontSize: '0.8em'}}>
+                {generatingPdf ? 'Generating...' : (quote.quotePdfUrl ? 'Re-generate PDF' : 'Generate PDF')}
+              </button>
+              {quote.status === 'ConvertedToPolicy' && <span style={{marginLeft: '10px', fontStyle: 'italic', fontSize: '0.8em'}}>(Cannot generate new PDF for converted quote)</span>}
+            </div>
           </section>
 
           <section>
