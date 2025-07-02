@@ -54,6 +54,10 @@ const QuoteSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: 'User', // References the User model, assuming agent has a 'agent' role
       index: true, // Good for querying quotes by agent
+    },
+    quotePdfUrl: { // URL of the generated PDF stored in S3
+      type: String,
+      trim: true,
     }
     // Could also add a generic 'createdBy' if admins/staff can also create quotes directly
     // createdBy: {

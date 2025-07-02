@@ -42,7 +42,7 @@
         *   [ ] API: Future: Ensure only relevant client or authorized agent can change quote status (depends on Auth & Roles)
     *   **Phase 2: PDF Generation & S3**
         *   [x] Backend: Implement PDF quote document generation
-        *   [ ] API: Integrate with S3 for storing PDF quotes
+        *   [x] API: Integrate with S3 for storing PDF quotes - *Controller and route created, Quote model updated. `pdfkit` added to package.json manually.*
 *   **Policy Issuance & Management (API):**
     *   [x] API: Define Policy Mongoose Model & API Endpoints (CRUD) - *Model defined, basic CRUD for admin implemented.*
     *   [x] API: Implement "Convert Quote to Policy" functionality - *Implemented in `createPolicyFromQuote`*

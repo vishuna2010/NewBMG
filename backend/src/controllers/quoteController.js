@@ -305,3 +305,120 @@ exports.updateQuoteStatus = async (req, res, next) => {
 
 // Optional: Delete a quote (e.g., if it's a draft and user wants to remove it)
 // exports.deleteQuote = async (req, res, next) => { ... }
+
+const PDFDocument = require('pdfkit');
+const { uploadToS3 } = require('../utils/s3Handler');
+const { v4: uuidv4 } = require('uuid');
+
+// @desc    Generate PDF for a quote, upload to S3, and save URL to quote
+// @route   POST /api/v1/quotes/:id/generate-pdf
+// @access  Private (Owner, Agent for their customers, Admin/Staff)
+exports.generateQuotePdf = async (req, res, next) => {
+  try {
+    const quote = await Quote.findById(req.params.id)
+      .populate('product')
+      .populate('customer', 'firstName lastName email')
+      .populate('agentId', 'firstName lastName email');
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: `Quote not found with id of ${req.params.id}`,
+      });
+    }
+
+    // Authorization (similar to getQuoteById)
+    const loggedInUser = req.user;
+    if (loggedInUser.role === 'customer' && (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)) {
+      return res.status(403).json({ success: false, error: 'Not authorized to generate PDF for this quote' });
+    }
+    if (loggedInUser.role === 'agent' &&
+        (!quote.agentId || quote.agentId.toString() !== loggedInUser.id) &&
+        (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)
+    ) {
+      if (!(quote.agentId && quote.agentId.toString() === loggedInUser.id)) {
+         return res.status(403).json({ success: false, error: 'Agent not authorized for this quote unless directly linked or owner.' });
+      }
+    }
+    // Admin/staff can proceed.
+
+    // --- PDF Generation Logic ---
+    const doc = new PDFDocument({ margin: 50 });
+    const buffers = [];
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      const fileName = `quote_${quote.quoteNumber}_${uuidv4()}.pdf`;
+      const s3Folder = `quotes/${quote._id.toString()}`; // Store in a folder specific to the quote
+
+      try {
+        const s3Data = await uploadToS3(pdfBuffer, fileName, 'application/pdf', s3Folder);
+
+        quote.quotePdfUrl = s3Data.Location; // Assuming Quote model will have 'quotePdfUrl'
+        await quote.save();
+
+        res.status(200).json({
+          success: true,
+          message: 'Quote PDF generated and saved successfully.',
+          data: { quotePdfUrl: s3Data.Location, quoteId: quote._id },
+        });
+      } catch (s3Error) {
+        console.error('S3 upload or quote save error:', s3Error);
+        return res.status(500).json({ success: false, error: 'Failed to upload PDF to S3 or save quote.' });
+      }
+    });
+
+    // Content for the PDF
+    doc.fontSize(20).text(`Quote: ${quote.quoteNumber}`, { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`);
+    if (quote.validUntil) {
+      doc.text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`);
+    }
+    doc.moveDown();
+
+    if (quote.customer) {
+      doc.fontSize(14).text('Customer Details:', { underline: true });
+      doc.fontSize(12).text(`Name: ${quote.customer.firstName} ${quote.customer.lastName}`);
+      doc.text(`Email: ${quote.customer.email}`);
+      doc.moveDown();
+    }
+
+    if (quote.agentId) {
+      doc.fontSize(14).text('Agent Details:', { underline: true });
+      doc.fontSize(12).text(`Name: ${quote.agentId.firstName} ${quote.agentId.lastName}`);
+      doc.text(`Email: ${quote.agentId.email}`);
+      doc.moveDown();
+    }
+
+    doc.fontSize(14).text('Product Details:', { underline: true });
+    doc.fontSize(12).text(`Product: ${quote.productDetailsSnapshot.name} (${quote.productDetailsSnapshot.productType})`);
+    doc.moveDown();
+
+    doc.fontSize(14).text('Quote Inputs:', { underline: true });
+    doc.fontSize(10);
+    for (const key in quote.quoteInputs) {
+      if (Object.hasOwnProperty.call(quote.quoteInputs, key)) {
+        doc.text(`${key}: ${JSON.stringify(quote.quoteInputs[key])}`);
+      }
+    }
+    doc.moveDown();
+    doc.moveDown();
+
+    doc.fontSize(16).text('Premium:', { underline: true });
+    doc.fontSize(14).text(`${quote.calculatedPremium} ${quote.productDetailsSnapshot.currency}`, { align: 'right' });
+    doc.moveDown();
+
+    doc.fontSize(8).text('Thank you for your business!', { align: 'center'});
+
+    doc.end();
+
+  } catch (error) {
+    console.error('Error in generateQuotePdf:', error);
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, error: `Quote not found with id of ${req.params.id}` });
+    }
+    res.status(500).json({ success: false, error: error.message || 'Server Error generating PDF' });
+  }
+};

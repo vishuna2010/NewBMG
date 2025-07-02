@@ -4,6 +4,7 @@ const {
   getAllQuotes,
   getQuoteById,
   updateQuoteStatus,
+  generateQuotePdf, // <-- Add this
   // updateQuoteDetails, // Optional, if implemented
   // deleteQuote,        // Optional, if implemented
 } = require('../controllers/quoteController');
@@ -27,5 +28,9 @@ router.route('/:id')
 router.route('/:id/status')
   // Owner can accept/reject. Admin/staff/agent might change other statuses.
   .put(protect, updateQuoteStatus);
+
+router.route('/:id/generate-pdf')
+  // Owner, or admin/staff/agent can generate PDF. Controller implements authorization.
+  .post(protect, generateQuotePdf);
 
 module.exports = router;
