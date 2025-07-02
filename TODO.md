@@ -19,6 +19,7 @@
     *   [x] Create Core Admin Portal Files & Layout (index.html, App.js, Sidebar, MainLayout etc.)
     *   [x] Create `package.json` for admin-portal
 *   [~] README files updates (Initial versions created, ongoing updates needed)
+*   [x] Backend: Configure CORS to allow frontend origins.
 
 ## II. Backend Tasks (`backend/`)
 
@@ -238,7 +239,11 @@
 ## IV. Admin Portal Frontend Tasks (`admin-portal/` - React)
 *(Note: Original TODO had Vue paths; tasks are adapted for React where UI is implied)*
 *   **Authentication & Layout:**
-    *   [x] UI: Phase 1a: Basic Login Page (`LoginPage.js` placeholder created)
+    *   [~] UI: Phase 1a: Basic Login Page (`LoginPage.js` UI enhanced, basic submit logic added, no actual auth yet)
+    *   [ ] UI: Admin Portal: Create AuthContext & AuthProvider
+    *   [ ] UI: Admin Portal: Implement Protected Routes
+    *   [ ] UI: Admin Portal: Update Services to Send Auth Token
+    *   [ ] UI: Admin Portal: Implement Logout
     *   [~] UI: Phase 1d: Implement frontend page protection middleware (check auth & redirect - conceptual in `App.js`)
     *   [x] UI: Basic Admin Portal Layout & Navigation structure (Sidebar, MainLayout created)
 *   **Dashboard (`AdminDashboardPage.js`):**
