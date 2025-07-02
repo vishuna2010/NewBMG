@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import 'antd/dist/reset.css'; // Import Ant Design CSS reset (for v5+)
+import './index.css'; // Your custom global styles should come after library styles
 import App from './App';
 // import reportWebVitals from './reportWebVitals'; // Can be added if needed
 

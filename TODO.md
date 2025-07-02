@@ -240,13 +240,17 @@
 ## IV. Admin Portal Frontend Tasks (`admin-portal/` - React)
 *(Note: Original TODO had Vue paths; tasks are adapted for React where UI is implied)*
 *   **Authentication & Layout:**
-    *   [~] UI: Phase 1a: Basic Login Page (`LoginPage.js` UI enhanced, basic submit logic added, no actual auth yet)
-    *   [ ] UI: Admin Portal: Create AuthContext & AuthProvider
-    *   [ ] UI: Admin Portal: Implement Protected Routes
-    *   [ ] UI: Admin Portal: Update Services to Send Auth Token
-    *   [ ] UI: Admin Portal: Implement Logout
-    *   [~] UI: Phase 1d: Implement frontend page protection middleware (check auth & redirect - conceptual in `App.js`)
+    *   [~] UI: Admin Portal: Implement Login Page UI & Basic Logic (`LoginPage.js` UI enhanced with AntD, basic submit logic calls authService)
+    *   [ ] UI: Admin Portal: Create AuthContext & AuthProvider (for token storage, user state, redirect)
+    *   [ ] UI: Admin Portal: Implement Protected Routes (using AuthContext)
+    *   [ ] UI: Admin Portal: Update Services to Send Auth Token (from AuthContext)
+    *   [ ] UI: Admin Portal: Implement Logout (clearing AuthContext & token)
+    *   [~] UI: Phase 1d: Implement frontend page protection middleware (check auth & redirect - conceptual in `App.js`, to be replaced by Protected Routes)
     *   [x] UI: Basic Admin Portal Layout & Navigation structure (Sidebar, MainLayout created)
+*   **UI Component Library Integration (Ant Design):**
+    *   [x] Install Ant Design and configure CSS
+    *   [x] Refactor LoginPage.js to use AntD components
+    *   [ ] UI: Gradually refactor other existing Admin Portal components to use AntD
 *   **Dashboard (`AdminDashboardPage.js`):**
     *   [~] UI: Admin dashboard with key metrics - Sales Report tabs now use real data. Sales Analytics chart has table fallback. Summary cards connected. (Placeholder page created; "real data" part is future work).
     *   [~] UI: Admin Overview page refactored for theme consistency (Styling of placeholder page).
