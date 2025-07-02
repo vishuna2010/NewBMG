@@ -18,7 +18,7 @@
     *   [x] Scaffold Admin Portal Directory Structure (`admin-portal/`)
     *   [x] Create Core Admin Portal Files & Layout (index.html, App.js, Sidebar, MainLayout etc.)
     *   [x] Create `package.json` for admin-portal
-*   [~] README files updates (Initial versions created, ongoing updates needed)
+*   [x] README files updates (Initial versions created, seeder info added)
 *   [x] Backend: Configure CORS to allow frontend origins.
 *   [x] Backend: Create Data Seeder Script (for admin user, etc.)
 

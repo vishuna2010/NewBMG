@@ -101,6 +101,35 @@ Ensure these ports are free or adjust the configurations in the respective `.env
 
 A root `.gitignore` file is included to help prevent committing sensitive `.env` files and other common temporary files.
 
+### Data Seeding (Backend)
+
+To populate your development database with initial data, such as a default admin user and other sample records, a seeder script is available in the backend.
+
+**Prerequisites:**
+*   Ensure your backend `.env` file (`backend/.env`) is correctly configured with your `MONGO_URI`.
+*   Make sure you have installed backend dependencies (`cd backend && npm install`).
+
+**Running the Seeder:**
+
+1.  Navigate to the backend directory:
+    ```bash
+    cd backend
+    ```
+2.  To **delete all existing users** and import the sample users (including a default admin):
+    ```bash
+    npm run seed
+    ```
+3.  To **only delete all existing users** from the database without importing new ones:
+    ```bash
+    npm run seed:destroy
+    ```
+
+**Default Admin Credentials (created by `npm run seed`):**
+*   **Email:** `admin@example.com`
+*   **Password:** `password123`
+
+Refer to `backend/src/config/seed.js` to see or modify the data being seeded.
+
 ## Contributing
 
 Details on contributing to this project will be added later. For now, refer to the [TODO.md](TODO.md) for tasks that need attention.
