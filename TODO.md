@@ -20,6 +20,7 @@
     *   [x] Create `package.json` for admin-portal
 *   [~] README files updates (Initial versions created, ongoing updates needed)
 *   [x] Backend: Configure CORS to allow frontend origins.
+*   [x] Backend: Create Data Seeder Script (for admin user, etc.)
 
 ## II. Backend Tasks (`backend/`)
 
