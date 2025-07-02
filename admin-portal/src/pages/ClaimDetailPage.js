@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getClaimById, updateClaimStatus, assignClaimToAdjuster, addClaimNote, addClaimAttachment } from '../services/claimService';
+import {
+  getClaimById,
+  updateClaimStatus,
+  assignClaimToAdjuster,
+  addClaimNote,
+  addClaimAttachment,
+  deleteClaimAttachment // <-- Import this
+} from '../services/claimService';
 import { getAllUsers } from '../services/userService'; // To fetch list of potential adjusters
 
 const ClaimDetailPage = () => {

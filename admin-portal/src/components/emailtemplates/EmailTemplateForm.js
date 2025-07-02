@@ -70,7 +70,7 @@ const EmailTemplateForm = ({ initialData = {}, onSubmit, isEditMode = false }) =
         {!isEditMode && <small>Can only contain alphanumeric characters, underscores, and hyphens (e.g., welcome_User-V1).</small>}
       </div>
       <div>
-        <label htmlFor="subject" style={labelStyle}>Subject (Placeholders e.g., `{{firstName}}`):</label>
+        <label htmlFor="subject" style={labelStyle}>Subject (Placeholders e.g., '{{firstName}}'):</label>
         <input type="text" id="subject" name="subject" value={formData.subject} onChange={handleChange} required style={inputStyle} />
       </div>
       <div>
@@ -78,7 +78,7 @@ const EmailTemplateForm = ({ initialData = {}, onSubmit, isEditMode = false }) =
         <input type="text" id="description" name="description" value={formData.description} onChange={handleChange} style={inputStyle} />
       </div>
       <div>
-        <label htmlFor="htmlBody" style={labelStyle}>HTML Body (Placeholders e.g., `{{quoteNumber}}`):</label>
+        <label htmlFor="htmlBody" style={labelStyle}>HTML Body (Placeholders e.g., '{{quoteNumber}}'):</label>
         <textarea id="htmlBody" name="htmlBody" value={formData.htmlBody} onChange={handleChange} required style={textAreaStyle} />
       </div>
       <div>

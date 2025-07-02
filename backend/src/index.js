@@ -1,6 +1,7 @@
 // Main application entry point
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors'); // Import CORS package
 const connectDB = require('./config/db');
 
 // Load env vars
@@ -11,6 +12,27 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Enable CORS
+// Define allowed origins
+const allowedOrigins = [
+  'http://localhost:3002', // Admin Portal
+  'http://localhost:3003', // Customer Portal
+  // Add any other origins you need to allow, like deployed frontend URLs
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true // If you need to handle cookies or authorization headers
+}));
 
 // Body parser middleware
 app.use(express.json());
