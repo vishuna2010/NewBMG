@@ -12,7 +12,7 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
     "antd": "^5.12.8",
-    "@ant-design/icons": "^5.2.6", // Added Ant Design Icons
+    "@ant-design/icons": "^5.2.6",
     "dayjs": "^1.11.10",
     "@csstools/normalize.css": "^12.0.0",
     "sanitize.css": "^13.0.0",
