@@ -27,28 +27,27 @@ import EmailTemplateCreatePage from './pages/EmailTemplateCreatePage';
 import EmailTemplateEditPage from './pages/EmailTemplateEditPage';
 
 function App() {
-  // For now, assume authenticated and redirect to dashboard
-  // In a real app, you'd have auth state and protected routes
-  const isAuthenticated = true; // Placeholder
+  // For now, assume NOT authenticated to show login page by default.
+  // This will be replaced by actual auth state from AuthContext later.
+  const isAuthenticated = false; // TEMPORARY CHANGE FOR TESTING LOGIN PAGE
 
   return (
-    <Router>
+    <Router basename="/admin"> {/* Added basename for admin portal */}
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} /> {/* LoginPage is outside MainLayout */}
         <Route
-          path="/admin/*"
+          path="/*" // All other routes under /admin (e.g., /admin/dashboard)
           element={
             isAuthenticated ? (
               <MainLayout>
                 <Routes>
                   <Route path="dashboard" element={<AdminDashboardPage />} />
-                  {/* <Route path="customers" element={<CustomersPage />} />  // Removed, merged into /users */}
                   <Route path="policies" element={<PoliciesPage />} />
-                  <Route path="policies/:id" element={<PolicyDetailPage />} /> {/* Added route for policy details */}
-                  <Route path="quotes" element={<QuotesListPage />} /> {/* Added route for quotes list */}
-                  <Route path="quotes/:id" element={<QuoteDetailPage />} /> {/* Added route for quote details */}
-                  <Route path="claims" element={<ClaimsPage />} /> {/* This is the Claims List Page */}
-                  <Route path="claims/:id" element={<ClaimDetailPage />} /> {/* Added route for claim details */}
+                  <Route path="policies/:id" element={<PolicyDetailPage />} />
+                  <Route path="quotes" element={<QuotesListPage />} />
+                  <Route path="quotes/:id" element={<QuoteDetailPage />} />
+                  <Route path="claims" element={<ClaimsPage />} />
+                  <Route path="claims/:id" element={<ClaimDetailPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="products/new" element={<ProductCreatePage />} />
                   <Route path="products/edit/:id" element={<ProductEditPage />} />
@@ -57,22 +56,37 @@ function App() {
                   <Route path="reports" element={<ReportsPage />} />
                   <Route path="communications" element={<CommunicationsPage />} />
                   <Route path="users" element={<UserManagementPage />} />
-                  <Route path="users/edit/:id" element={<UserEditPage />} /> {/* Added route for editing a user */}
+                  <Route path="users/edit/:id" element={<UserEditPage />} />
                   <Route path="email-templates" element={<EmailTemplatesListPage />} />
                   <Route path="email-templates/new" element={<EmailTemplateCreatePage />} />
                   <Route path="email-templates/edit/:identifier" element={<EmailTemplateEditPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="profile" element={<AdminProfilePage />} />
-                  <Route index element={<Navigate to="dashboard" />} /> {/* Default admin page */}
+                  {/* Default for /admin if authenticated */}
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  {/* Catch-all for /admin/* if authenticated but no match, redirect to dashboard */}
+                  <Route path="*" element={<Navigate to="dashboard" replace />} />
                 </Routes>
               </MainLayout>
             ) : (
-              <Navigate to="/login" />
+              // If not authenticated, any attempt to access /admin/* (other than /admin/login explicitly)
+              // should redirect to /admin/login.
+              // The Navigate component here will redirect if this element is rendered.
+              <Navigate to="/admin/login" replace />
             )
           }
         />
-        {/* Redirect root to admin dashboard if authenticated, else to login */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/admin/dashboard" : "/login"} />} />
+        {/* Root path of the application (e.g. http://localhost:3002/) redirects based on auth */}
+        {/* Considering basename="/admin", this might not be hit if deployed under /admin.
+            If deployed at root, it correctly redirects.
+            If deployed under /admin, the web server should route /admin to this app,
+            and then the internal / path (which becomes /admin) will be handled by the /* route above.
+            Let's simplify and assume the app itself handles its root relative to its deployment.
+            If deployed at http://localhost:3002/admin, then accessing this URL
+            will be handled by the path="/*" route above due to the basename.
+         */}
+         <Route path="/" element={ <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace /> } />
+
       </Routes>
     </Router>
   );
