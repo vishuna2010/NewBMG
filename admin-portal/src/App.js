@@ -70,9 +70,9 @@ function App() {
               </MainLayout>
             ) : (
               // If not authenticated, any attempt to access /admin/* (other than /admin/login explicitly)
-              // should redirect to /admin/login.
+              // should redirect to /login (which becomes /admin/login due to basename).
               // The Navigate component here will redirect if this element is rendered.
-              <Navigate to="/admin/login" replace />
+              <Navigate to="/login" replace />
             )
           }
         />

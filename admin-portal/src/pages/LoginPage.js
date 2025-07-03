@@ -25,8 +25,9 @@ const LoginPage = () => {
       if (response && response.success) { // Check if response itself is defined and successful
         console.log('Login successful via AuthContext!');
         // AuthContext's login function handles token storage and setting user state.
-        // Now, navigate to the dashboard.
-        navigate('/admin/dashboard'); // Navigate to dashboard (or intended admin home)
+        // Now, navigate to the dashboard. Since Router has basename="/admin",
+        // we navigate relative to that.
+        navigate('/dashboard');
       } else {
         // This else block might not be strictly necessary if contextLogin always throws on failure.
         // However, it's good for robustness if contextLogin could return a non-error failure.
