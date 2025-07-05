@@ -4,18 +4,35 @@ import { Link, NavLink } from 'react-router-dom';
 // but could be moved to Header.css or Header.module.css
 
 const Header = () => {
+  const menuItems = [
+    { path: "/", name: "Dashboard" },
+    { path: "/profile", name: "My Profile" },
+    { path: "/policies", name: "My Policies" },
+    { path: "/get-quote", name: "Get Quote" },
+    { path: "/claims", name: "My Claims" },
+    { path: "/payments", name: "Payments" },
+    { path: "/documents", name: "My Documents" },
+    { path: "/support", name: "Support" },
+    { path: "/notifications", name: "Notifications" },
+    // { path: "/login", name: "Login" }, // Example, can be added later
+  ];
+
   return (
     <header className="app-header">
       <Link to="/" className="logo">InsuranceCo</Link>
       <nav>
         <ul>
-          <li><NavLink to="/" className={({ isActive }) => isActive ? "active" : ""}>Home</NavLink></li>
-          {/* Example Future Links - these would correspond to routes in App.js */}
-          {/* <li><NavLink to="/policies" className={({ isActive }) => isActive ? "active" : ""}>My Policies</NavLink></li> */}
-          {/* <li><NavLink to="/claims" className={({ isActive }) => isActive ? "active" : ""}>My Claims</NavLink></li> */}
-          {/* <li><NavLink to="/quotes" className={({ isActive }) => isActive ? "active" : ""}>Get Quote</NavLink></li> */}
-          {/* <li><NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink></li> */}
-          {/* <li><NavLink to="/login" className={({ isActive }) => isActive ? "active" : ""}>Login</NavLink></li> */}
+          {menuItems.map((item) => (
+            <li key={item.name}>
+              <NavLink
+                to={item.path}
+                end={item.path === "/"} // Ensure "Dashboard" is only active for exact path
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                {item.name}
+              </NavLink>
+            </li>
+          ))}
         </ul>
       </nav>
     </header>
