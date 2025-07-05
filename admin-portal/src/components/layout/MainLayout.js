@@ -49,7 +49,7 @@ const MainLayout = ({ children, pageTitle, actions }) => {
   // and to adjust content margin if we weren't using nested AntD Layout.
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
+  // const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed); // Removed as it's not used
 
   // These are typical Ant Design Sider widths
   const siderWidth = sidebarCollapsed ? 80 : 250;
