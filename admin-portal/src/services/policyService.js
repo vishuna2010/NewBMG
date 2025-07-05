@@ -2,12 +2,7 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3004/api/v1';
 
-// Placeholder for getting the auth token
-// const getToken = () => {
-//   // return localStorage.getItem('adminToken');
-//   console.warn("policyService: getToken() is a placeholder. Real token management needed.");
-//   return null;
-// };
+const getToken = () => localStorage.getItem('adminToken');
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -27,11 +22,10 @@ const handleResponse = async (response) => {
 
 // Get all policies (admin/agent view, supports query params for filtering)
 export const getAllPolicies = async (queryParams = {}) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const queryString = new URLSearchParams(queryParams).toString();
   const response = await fetch(`${API_BASE_URL}/policies?${queryString}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
@@ -39,10 +33,9 @@ export const getAllPolicies = async (queryParams = {}) => {
 
 // Get a single policy by its ID
 export const getPolicyById = async (id) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/policies/${id}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
@@ -50,12 +43,11 @@ export const getPolicyById = async (id) => {
 
 // Update a policy (e.g., status, documents, notes)
 export const updatePolicy = async (id, policyData) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/policies/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify(policyData),
   });
@@ -64,11 +56,10 @@ export const updatePolicy = async (id, policyData) => {
 
 // "Delete" a policy (soft delete / cancel)
 export const deletePolicy = async (id) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/policies/${id}`, {
     method: 'DELETE',
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   if (!response.ok) {
@@ -86,12 +77,11 @@ export const deletePolicy = async (id) => {
 
 // Create a policy from an accepted quote
 export const createPolicyFromQuote = async (quoteId) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/policies/from-quote`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify({ quoteId }),
   });

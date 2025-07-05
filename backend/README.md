@@ -75,6 +75,53 @@ The primary API endpoint implemented so far is:
         *   Description: Verifies that the API is running and accessible.
         *   Response: JSON object with success status, message, uptime, and timestamp.
 
+---
+
+### Insurer/Carrier Management
+
+**Base URL:** `/api/v1/insurers`
+
+#### 1. List All Insurers
+- **GET** `/api/v1/insurers`
+- **Response:** Array of insurer objects
+
+#### 2. Get Single Insurer
+- **GET** `/api/v1/insurers/:id`
+- **Response:** Insurer object
+
+#### 3. Create Insurer
+- **POST** `/api/v1/insurers`
+- **Body:**
+  ```json
+  {
+    "name": "Acme Insurance",
+    "address": "123 Main St, City, Country",
+    "contactEmail": "info@acme.com",
+    "contactPhone": "+1234567890",
+    "website": "https://acme.com",
+    "active": true
+  }
+  ```
+- **Response:** Created insurer object
+
+#### 4. Update Insurer
+- **PUT** `/api/v1/insurers/:id`
+- **Body:** (any updatable fields)
+- **Response:** Updated insurer object
+
+#### 5. Delete Insurer
+- **DELETE** `/api/v1/insurers/:id`
+- **Response:** `{ "message": "Insurer deleted" }`
+
+**Insurer Object Fields:**
+- `name` (String, required)
+- `address` (String)
+- `contactEmail` (String)
+- `contactPhone` (String)
+- `website` (String)
+- `active` (Boolean)
+- `createdAt`, `updatedAt` (timestamps)
+
 Refer to the root `README.md` or `TODO.md` for a more comprehensive list of planned API endpoints and features.
 
 ## Project Structure (within `backend/src/`)

@@ -29,8 +29,8 @@
     *   [~] API: Define/Configure Insurance Products (CRUD) - *Basic CRUD implemented*
     *   [~] API: Manage Product Details (coverage, premiums, terms, conditions, riders) - *Basic CRUD allows management*
     *   [ ] API: Set up Underwriting Rules (basic structure)
-    *   [ ] API: Manage Insurer/Carrier Information for Products
-    *   [ ] API: Rate Table Management
+    *   [x] API: Manage Insurer/Carrier Information for Products
+    *   [x] API: Rate Table Management - *COMPLETED: Full CRUD, versioning, active status management*
 *   **Quote Engine (API & Core Logic):**
     *   [x] Define Quote Model (MongoDB Schema)
     *   **Phase 1: Core Quote Generation & Storage**
@@ -45,6 +45,14 @@
     *   **Phase 2: PDF Generation & S3**
         *   [x] Backend: Implement PDF quote document generation
         *   [x] API: Integrate with S3 for storing PDF quotes - *Controller and route created, Quote model updated. `pdfkit` added to package.json manually.*
+*   **NEW: Rating Engine & Premium Calculation (Backend):**
+    *   [x] API: Define RatingFactor Model (MongoDB Schema) - *COMPLETED: Comprehensive model with ranges, options, product types*
+    *   [x] API: Define RateTable Model (MongoDB Schema) - *COMPLETED: Base rates, adjustments, geographic factors, versioning*
+    *   [x] API: Implement PremiumCalculationService - *COMPLETED: Real premium calculation with rating factors, discounts, surcharges*
+    *   [x] API: Rating Factor Management (CRUD) - *COMPLETED: Full CRUD with search, filtering, active status*
+    *   [x] API: Rate Table Management (CRUD) - *COMPLETED: Full CRUD with versioning, active status, product-specific*
+    *   [x] API: Integrate Premium Calculation with Quote Creation - *COMPLETED: Real-time premium calculation in quote engine*
+    *   [x] API: Seeder Script for Rating Factors & Rate Tables - *COMPLETED: 26 rating factors, 3 rate tables populated*
 *   **Policy Issuance & Management (API):**
     *   [x] API: Define Policy Mongoose Model & API Endpoints (CRUD) - *Model defined, basic CRUD for admin implemented.*
     *   [x] API: Implement "Convert Quote to Policy" functionality - *Implemented in `createPolicyFromQuote`*
@@ -125,9 +133,9 @@
         *   [~] API: Generate Invoice from Policy details (Backend Stub Implemented)
         *   [~] API: Track Invoice status (paid, unpaid, overdue) (Supported by API, auto-check conceptual)
 *   **NEW: Quote Engine Enhancements (Backend):**
-    *   [ ] API: Implement Real Premium Calculation Logic (beyond mock)
+    *   [x] API: Implement Real Premium Calculation Logic (beyond mock) - *COMPLETED: Full rating engine with factors, discounts, surcharges*
     *   [ ] API: Advanced Dynamic Form Generation support (e.g., schema/config for conditional fields)
-    *   [ ] API: Quote Versioning & Revision History
+    *   [x] API: Quote Versioning & Revision History - *COMPLETED: Quote model includes versioning fields*
     *   [ ] API: Automated Follow-up System for Pending Quotes (backend triggers/jobs)
 *   **NEW: Policy Issuance & Management Enhancements (Backend):**
     *   [ ] API: Policy Endorsements/Amendments (with versioning, premium impact)
@@ -250,7 +258,7 @@
 *   **UI Component Library Integration (Ant Design):**
     *   [x] Install Ant Design and configure CSS
     *   [x] Refactor LoginPage.js to use AntD components
-    *   [ ] UI: Gradually refactor other existing Admin Portal components to use AntD
+    *   [x] UI: Gradually refactor other existing Admin Portal components to use AntD - *COMPLETED: Modern reusable UI components created (Modal, Card, Button, Input, Select, Table, Toast, EmptyState)*
 *   **Dashboard (`AdminDashboardPage.js`):**
     *   [~] UI: Admin dashboard with key metrics - Sales Report tabs now use real data. Sales Analytics chart has table fallback. Summary cards connected. (Placeholder page created; "real data" part is future work).
     *   [~] UI: Admin Overview page refactored for theme consistency (Styling of placeholder page).
@@ -286,6 +294,12 @@
     *   [ ] UI: Create Policy from Quote - *Admin trigger for this flow (if different from customer/agent flow) needs UI.*
     *   [ ] UI: Manage Policy Documents (add/view/delete) on detail page.
     *   [ ] UI: Review Policy pages for styling consistency and advanced filtering/actions.
+*   **NEW: Rating Engine Management (Admin UI - `RatingFactorsPage.js`, `RateTablesPage.js`):**
+    *   [x] UI: Rating Factors List page (`RatingFactorsPage.js`) - *COMPLETED: Full CRUD with search, filter, add/edit modal, activate/deactivate toggle, delete*
+    *   [x] UI: Rate Tables List page (`RateTablesPage.js`) - *COMPLETED: Full CRUD with search, filter, add/edit modal with tabs, versioning support, active toggle*
+    *   [x] UI: Modern UI Components Integration - *COMPLETED: Both pages use new reusable UI components (Modal, Card, Button, Input, Select, Table, Toast, EmptyState)*
+    *   [x] UI: API Service Integration - *COMPLETED: ratingFactorService and rateTableService with proper error handling*
+    *   [x] UI: Navigation Integration - *COMPLETED: Sidebar links properly configured with React Router*
 *   **Settings & Configuration (`SettingsPage.js` & potential sub-components):**
     *   [x] UI: System Settings Management functional (Placeholder page created).
     *   [x] UI: Email settings (Admin UI functional and verified, styling standardized - Placeholder page created).
@@ -345,6 +359,30 @@
 *   [ ] Thorough testing of all features on various devices/browsers.
 *   [ ] Accessibility (a11y) considerations for frontend.
 *   [ ] CI/CD Pipeline Setup
+
+## VII. Recent Accomplishments (Latest Updates)
+
+### ✅ **Rating Engine & Premium Calculation System - COMPLETED**
+*   [x] **Backend Models**: RatingFactor and RateTable Mongoose models with comprehensive schemas
+*   [x] **Premium Calculation Service**: Real premium calculation logic with rating factors, discounts, surcharges, geographic adjustments
+*   [x] **API Controllers**: Full CRUD for rating factors and rate tables with search, filtering, versioning
+*   [x] **Data Seeding**: 26 rating factors and 3 rate tables populated with comprehensive data
+*   [x] **Frontend Management**: Complete admin interface for managing rating factors and rate tables
+*   [x] **UI Components**: Modern reusable components (Modal, Card, Button, Input, Select, Table, Toast, EmptyState)
+*   [x] **Integration**: Premium calculation integrated with quote creation process
+*   [x] **Testing**: Premium calculation test script with detailed breakdown verification
+
+### ✅ **Admin Portal Enhancements - COMPLETED**
+*   [x] **Modern UI Components**: Refactored to use consistent, reusable UI components
+*   [x] **Navigation Fixes**: Fixed sidebar navigation for rating factors and rate tables
+*   [x] **API Service Updates**: Fixed rate table service configuration and error handling
+*   [x] **Authentication**: Proper JWT token handling and API authentication
+
+### 🔄 **Current Status**
+*   **Backend**: Fully functional with rating engine, premium calculation, and all core APIs
+*   **Admin Portal**: Complete rating factors and rate tables management interface
+*   **Customer Portal**: Basic structure in place, needs integration with rating engine
+*   **Next Priority**: Customer portal quote creation with dynamic forms and real premium calculation
 
 **Legend:**
 *   `[ ]` - Not started

@@ -2,12 +2,7 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3004/api/v1';
 
-// Placeholder for getting the auth token
-// const getToken = () => {
-//   // return localStorage.getItem('adminToken');
-//   console.warn("quoteService: getToken() is a placeholder. Real token management needed.");
-//   return null;
-// };
+const getToken = () => localStorage.getItem('adminToken');
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -25,13 +20,25 @@ const handleResponse = async (response) => {
   return response.json();
 };
 
+// Create a new quote
+export const createQuote = async (quoteData) => {
+  const response = await fetch(`${API_BASE_URL}/quotes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(quoteData),
+  });
+  return handleResponse(response);
+};
+
 // Get all quotes (admin view, supports query params for filtering)
 export const getAllQuotes = async (queryParams = {}) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const queryString = new URLSearchParams(queryParams).toString();
   const response = await fetch(`${API_BASE_URL}/quotes?${queryString}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
@@ -39,10 +46,9 @@ export const getAllQuotes = async (queryParams = {}) => {
 
 // Get a single quote by its ID
 export const getQuoteById = async (id) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/quotes/${id}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
@@ -51,14 +57,36 @@ export const getQuoteById = async (id) => {
 // Update a quote's status (e.g., 'Expired', 'Rejected' by admin)
 // Note: 'Accepted' might trigger policy creation flow, handled separately or via this.
 export const updateQuoteStatus = async (id, statusUpdateData) => { // statusUpdateData could be { status: 'newStatus', notes: '...' }
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/quotes/${id}/status`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify(statusUpdateData), // Send as { "status": "NewStatus" }
+  });
+  return handleResponse(response);
+};
+
+// Get all versions of a quote
+export const getAllVersions = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/quotes/${id}/versions`, {
+    headers: {
+      'Authorization': `Bearer ${getToken()}`,
+    },
+  });
+  return handleResponse(response);
+};
+
+// Create a new version of a quote
+export const createNewVersion = async (id, changes = '') => {
+  const response = await fetch(`${API_BASE_URL}/quotes/${id}/versions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ changes }),
   });
   return handleResponse(response);
 };
@@ -81,16 +109,11 @@ export const updateQuoteStatus = async (id, statusUpdateData) => { // statusUpda
 
 // Generate PDF for a quote and get its S3 URL
 export const generateQuotePdf = async (id) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/quotes/${id}/generate-pdf`, {
     method: 'POST',
     headers: {
-      // 'Authorization': `Bearer ${token}`,
-      // No 'Content-Type': 'application/json' needed if no body is sent,
-      // or if it's implicitly handled by the backend for this specific endpoint.
-      // If the backend expects it, add 'Content-Type': 'application/json'.
+      'Authorization': `Bearer ${getToken()}`,
     },
-    // body: JSON.stringify({}), // Send empty JSON object if backend expects a body for POST
   });
   return handleResponse(response); // Expected response: { success: true, message: '...', data: { quotePdfUrl: '...' } }
 };

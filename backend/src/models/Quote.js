@@ -6,6 +6,29 @@ const QuoteSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    // Versioning fields
+    version: {
+      type: Number,
+      default: 1,
+    },
+    parentQuote: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Quote',
+      // Reference to the original quote (null for version 1)
+    },
+    isLatestVersion: {
+      type: Boolean,
+      default: true,
+    },
+    versionHistory: [{
+      version: Number,
+      quoteId: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Quote',
+      },
+      createdAt: Date,
+      changes: String, // Description of what changed in this version
+    }],
     customer: { // For now, store as ObjectId, can be populated later
       type: mongoose.Schema.ObjectId,
       ref: 'User', // Changed from Customer to User
@@ -35,6 +58,11 @@ const QuoteSchema = new mongoose.Schema(
     calculatedPremium: {
       type: Number,
       required: [true, 'Calculated premium is required'],
+    },
+    // Detailed breakdown of premium calculation
+    premiumBreakdown: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
     status: {
       type: String,
@@ -82,5 +110,48 @@ QuoteSchema.pre('save', function(next) {
   next();
 });
 
+// Method to create a new version of this quote
+QuoteSchema.methods.createNewVersion = async function(changes = '') {
+  const newQuote = new this.constructor({
+    ...this.toObject(),
+    _id: undefined, // Remove the _id so a new one is generated
+    version: this.version + 1,
+    parentQuote: this.parentQuote || this._id,
+    isLatestVersion: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  
+  // Mark current quote as not latest
+  this.isLatestVersion = false;
+  await this.save();
+  
+  // Add to version history
+  newQuote.versionHistory = [
+    ...this.versionHistory,
+    {
+      version: this.version,
+      quoteId: this._id,
+      createdAt: this.createdAt,
+      changes: changes || 'Quote updated',
+    }
+  ];
+  
+  return await newQuote.save();
+};
+
+// Static method to get all versions of a quote
+QuoteSchema.statics.getAllVersions = async function(quoteId) {
+  const quote = await this.findById(quoteId);
+  if (!quote) return null;
+  
+  const parentId = quote.parentQuote || quote._id;
+  return await this.find({
+    $or: [
+      { _id: parentId },
+      { parentQuote: parentId }
+    ]
+  }).sort({ version: 1 });
+};
 
 module.exports = mongoose.model('Quote', QuoteSchema);

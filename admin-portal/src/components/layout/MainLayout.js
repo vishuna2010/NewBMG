@@ -1,17 +1,19 @@
 import React from 'react';
 import Sidebar from './Sidebar';
-import AdminHeader from './AdminHeader'; // Optional Header for the content area
+import AdminHeader from './AdminHeader';
 
-const MainLayout = ({ children }) => {
+const MainLayout = ({ children, pageTitle, actions }) => {
   return (
-    <div className="admin-layout">
+    <div className="admin-layout" style={{ display: 'flex', flexGrow: 1, minHeight: '100vh' }}>
       <Sidebar />
-      <main className="main-content-area">
-        <AdminHeader /> {/* This header is part of the scrollable content area */}
-        <div className="content-wrapper">
-          {children}
-        </div>
-      </main>
+      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <AdminHeader pageTitle={pageTitle} actions={actions} />
+        <main className="main-content-area">
+          <div className="content-wrapper">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

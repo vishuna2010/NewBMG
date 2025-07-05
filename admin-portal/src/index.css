@@ -73,7 +73,7 @@ code {
 .main-content-area {
   margin-left: 240px; /* Same as sidebar width */
   flex-grow: 1;
-  padding: 20px;
+  padding: 0 20px 20px 20px; /* Remove top padding, keep others */
   background-color: #f9fafc;
   overflow-y: auto;
 }
@@ -99,4 +99,75 @@ code {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Sidebar header and toggle */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: #ecf0f1;
+  font-size: 1.2rem;
+  cursor: pointer;
+  outline: none;
+  margin-left: 10px;
+  transition: color 0.2s;
+}
+.sidebar-toggle:hover {
+  color: #ffffff;
+}
+
+/* Sidebar icons and labels */
+.sidebar-icon {
+  font-size: 1.2rem;
+  margin-right: 12px;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+}
+.sidebar.collapsed .sidebar-label {
+  display: none;
+}
+.sidebar.collapsed {
+  width: 60px;
+  min-width: 60px;
+}
+.sidebar.collapsed .logo {
+  font-size: 1.2rem;
+  margin-bottom: 0;
+}
+.sidebar.collapsed .sidebar-header {
+  margin-bottom: 10px;
+}
+
+/* Topbar styles (for future use) */
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  justify-content: flex-end;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar .topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.topbar .topbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: 10px;
+  border: 2px solid #e0e0e0;
 }

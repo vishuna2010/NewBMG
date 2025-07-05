@@ -1,225 +1,401 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getQuoteById, updateQuoteStatus, generateQuotePdf } from '../services/quoteService'; // Added generateQuotePdf
-import { createPolicyFromQuote } from '../services/policyService'; // For "Convert to Policy"
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { getQuoteById, getAllVersions, createNewVersion, updateQuoteStatus, generateQuotePdf } from '../services/quoteService';
+import MainLayout from '../components/layout/MainLayout';
 
 const QuoteDetailPage = () => {
-  const { id: quoteId } = useParams();
-  const navigate = useNavigate();
-
+  const { id } = useParams();
   const [quote, setQuote] = useState(null);
+  const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isEditingStatus, setIsEditingStatus] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
-  const [submittingStatus, setSubmittingStatus] = useState(false);
-  const [submittingPolicy, setSubmittingPolicy] = useState(false);
-  const [generatingPdf, setGeneratingPdf] = useState(false); // New state for PDF generation
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
-  // Define statuses admin can typically set. 'Accepted' might have a different flow (e.g. customer accepts)
-  // but admin might need to override or manually set it.
-  const adminSettableStatuses = ['Draft', 'Quoted', 'Accepted', 'Rejected', 'Expired'];
-
-  const fetchQuote = useCallback(async () => { // Wrapped in useCallback
-    if (!quoteId) {
-      setError("No quote ID provided.");
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
+  const fetchQuote = async () => {
     try {
-      const response = await getQuoteById(quoteId);
-      if (response.success && response.data) {
-        setQuote(response.data);
-        setNewStatus(response.data.status);
-      } else {
-        setError(response.error || 'Quote not found.');
-      }
+      setLoading(true);
+      setError(null);
+      const response = await getQuoteById(id);
+      setQuote(response.data);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [quoteId]); // Dependency for useCallback
+  };
+
+  const fetchVersions = async () => {
+    try {
+      const response = await getAllVersions(id);
+      setVersions(response.data || []);
+    } catch (err) {
+      console.error('Error fetching versions:', err);
+    }
+  };
 
   useEffect(() => {
     fetchQuote();
-  }, [fetchQuote]); // Use fetchQuote from useCallback
+    fetchVersions();
+  }, [id]);
 
-  const handleStatusUpdate = async (e) => {
-    e.preventDefault();
-    if (!newStatus || newStatus === quote.status) {
-      setIsEditingStatus(false);
-      return;
-    }
-    setSubmittingStatus(true);
-    setError(null);
+  const handleCreateNewVersion = async () => {
+    const changes = prompt('Enter a description of changes for the new version:');
+    if (!changes) return;
+    
+    setSaving(true);
     try {
-      const updatedQuoteData = await updateQuoteStatus(quoteId, { status: newStatus });
-      setQuote(updatedQuoteData.data);
-      setIsEditingStatus(false);
-      alert('Quote status updated successfully!');
+      await createNewVersion(id, changes);
+      await fetchQuote();
+      await fetchVersions();
+      setToast({ msg: 'New version created successfully!', type: 'success' });
+      setTimeout(() => setToast(null), 2000);
     } catch (err) {
-      setError(err.message);
-      alert(`Error updating status: ${err.message}`);
-    } finally {
-      setSubmittingStatus(false);
+      setToast({ msg: 'Error creating new version', type: 'error' });
+      setTimeout(() => setToast(null), 2000);
     }
+    setSaving(false);
+  };
+
+  const handleStatusUpdate = async (newStatus) => {
+    if (!window.confirm(`Are you sure you want to change the status to "${newStatus}"?`)) return;
+    
+    setSaving(true);
+    try {
+      await updateQuoteStatus(id, { status: newStatus });
+      await fetchQuote();
+      setToast({ msg: 'Status updated successfully!', type: 'success' });
+      setTimeout(() => setToast(null), 2000);
+    } catch (err) {
+      setToast({ msg: 'Error updating status', type: 'error' });
+      setTimeout(() => setToast(null), 2000);
+    }
+    setSaving(false);
   };
 
   const handleGeneratePdf = async () => {
-    if (!quote || !quote._id) {
-      alert("Quote data is not available.");
-      return;
-    }
-    setGeneratingPdf(true);
-    setError(null);
+    setSaving(true);
     try {
-      const response = await generateQuotePdf(quote._id);
-      if (response.success && response.data && response.data.quotePdfUrl) {
-        // Update the local quote state to include the new PDF URL
-        setQuote(prevQuote => ({ ...prevQuote, quotePdfUrl: response.data.quotePdfUrl }));
-        alert('Quote PDF generated successfully!');
-        // Optionally open the PDF in a new tab immediately
-        // window.open(response.data.quotePdfUrl, '_blank');
-      } else {
-        throw new Error(response.error || "Failed to generate PDF.");
+      const response = await generateQuotePdf(id);
+      if (response.data.quotePdfUrl) {
+        window.open(response.data.quotePdfUrl, '_blank');
+        setToast({ msg: 'PDF generated successfully!', type: 'success' });
       }
+      setTimeout(() => setToast(null), 2000);
     } catch (err) {
-      setError(err.message);
-      alert(`Error generating PDF: ${err.message}`);
-    } finally {
-      setGeneratingPdf(false);
+      setToast({ msg: 'Error generating PDF', type: 'error' });
+      setTimeout(() => setToast(null), 2000);
     }
+    setSaving(false);
   };
 
-  const handleConvertToPolicy = async () => {
-    if (quote.status !== 'Accepted') {
-        alert("Quote must be in 'Accepted' status to be converted to a policy.");
-        return;
-    }
-    if (!window.confirm(`Are you sure you want to convert quote ${quote.quoteNumber} to a policy?`)) {
-        return;
-    }
+  const actions = (
+    <>
+      <button 
+        onClick={() => setShowVersionHistory(!showVersionHistory)}
+        style={{ 
+          marginRight: 12, 
+          padding: '8px 16px', 
+          background: showVersionHistory ? '#6c757d' : '#17a2b8', 
+          color: '#fff', 
+          border: 'none', 
+          borderRadius: 6, 
+          fontWeight: 500, 
+          cursor: 'pointer' 
+        }}
+      >
+        {showVersionHistory ? 'Hide' : 'Show'} Version History
+      </button>
+      {quote?.isLatestVersion && (
+        <button 
+          onClick={handleCreateNewVersion}
+          disabled={saving}
+          style={{ 
+            marginRight: 12, 
+            padding: '8px 16px', 
+            background: '#28a745', 
+            color: '#fff', 
+            border: 'none', 
+            borderRadius: 6, 
+            fontWeight: 500, 
+            cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.6 : 1
+          }}
+        >
+          Create New Version
+        </button>
+      )}
+      <button 
+        onClick={handleGeneratePdf}
+        disabled={saving}
+        style={{ 
+          marginRight: 12, 
+          padding: '8px 16px', 
+          background: '#dc3545', 
+          color: '#fff', 
+          border: 'none', 
+          borderRadius: 6, 
+          fontWeight: 500, 
+          cursor: saving ? 'not-allowed' : 'pointer',
+          opacity: saving ? 0.6 : 1
+        }}
+      >
+        Generate PDF
+      </button>
+      <Link 
+        to="/quotes" 
+        style={{ 
+          padding: '8px 16px', 
+          backgroundColor: '#6c757d', 
+          color: 'white', 
+          textDecoration: 'none', 
+          borderRadius: '6px',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}
+      >
+        Back to Quotes
+      </Link>
+    </>
+  );
 
-    setSubmittingPolicy(true);
-    setError(null);
-    try {
-        const policyResponse = await createPolicyFromQuote(quote._id);
-        if (policyResponse.success && policyResponse.data) {
-            alert(`Policy ${policyResponse.data.policyNumber} created successfully from quote ${quote.quoteNumber}!`);
-            // Optionally navigate to the new policy's detail page
-            navigate(`/admin/policies/${policyResponse.data._id}`);
-            // Or refresh quote data as its status would have changed
-            // fetchQuote();
-        } else {
-            throw new Error(policyResponse.error || "Failed to create policy.");
-        }
-    } catch (err) {
-        setError(err.message);
-        alert(`Error converting quote to policy: ${err.message}`);
-    } finally {
-        setSubmittingPolicy(false);
-    }
-  };
+  if (loading) {
+    return (
+      <MainLayout pageTitle="Quote Details" actions={actions}>
+        <div className="content-wrapper">
+          <p>Loading quote details...</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  if (loading) return <p>Loading quote details...</p>;
-  if (error && !quote) return <p style={{ color: 'red' }}>Error: {error}</p>;
-  if (!quote) return <p>Quote not found.</p>;
+  if (error) {
+    return (
+      <MainLayout pageTitle="Quote Details" actions={actions}>
+        <div className="content-wrapper">
+          <p style={{ color: 'red' }}>Error loading quote: {error}</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const detailItemStyle = { marginBottom: '10px' };
-  const labelStyle = { fontWeight: 'bold', marginRight: '5px' };
+  if (!quote) {
+    return (
+      <MainLayout pageTitle="Quote Details" actions={actions}>
+        <div className="content-wrapper">
+          <p>Quote not found.</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
-    <div>
-      <h1 className="page-title">Quote Details: {quote.quoteNumber}</h1>
-      <Link to="/admin/quotes" style={{display: 'inline-block', marginBottom: '20px'}}>&larr; Back to Quotes List</Link>
-
-      {error && <p style={{color: 'red', border: '1px solid red', padding: '10px', marginBottom: '10px'}}>Error: {error}</p>}
-
+    <MainLayout pageTitle={`Quote: ${quote.quoteNumber}`} actions={actions}>
       <div className="content-wrapper">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          <section>
-            <h3>Quote Information</h3>
-            <div style={detailItemStyle}><span style={labelStyle}>Quote Number:</span> {quote.quoteNumber}</div>
-            <div style={detailItemStyle}><span style={labelStyle}>Status:</span> {quote.status}
-              {!isEditingStatus && quote.status !== 'ConvertedToPolicy' ? (
-                <button onClick={() => { setNewStatus(quote.status); setIsEditingStatus(true); }} style={{ marginLeft: '10px', fontSize: '0.8em' }}>Change Status</button>
-              ) : quote.status === 'ConvertedToPolicy' ? (
-                <span style={{marginLeft: '10px', fontStyle: 'italic'}}>(Converted to Policy)</span>
-              ) : (
-                <form onSubmit={handleStatusUpdate} style={{ display: 'inline-block', marginLeft: '10px' }}>
-                  <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} style={{marginRight: '5px'}}>
-                    {adminSettableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <button type="submit" disabled={submittingStatus} style={{fontSize: '0.8em'}}>{submittingStatus ? 'Saving...' : 'Save'}</button>
-                  <button type="button" onClick={() => setIsEditingStatus(false)} style={{marginLeft: '5px', fontSize: '0.8em'}}>Cancel</button>
-                </form>
-              )}
-            </div>
-            <div style={detailItemStyle}><span style={labelStyle}>Calculated Premium:</span> {quote.calculatedPremium} {quote.productDetailsSnapshot?.currency}</div>
-            <div style={detailItemStyle}><span style={labelStyle}>Valid Until:</span> {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : 'N/A'}</div>
-            <div style={detailItemStyle}><span style={labelStyle}>Created At:</span> {new Date(quote.createdAt).toLocaleString()}</div>
-            <div style={detailItemStyle}><span style={labelStyle}>Last Updated:</span> {new Date(quote.updatedAt).toLocaleString()}</div>
-            {quote.notes && <div style={detailItemStyle}><span style={labelStyle}>Notes:</span> {quote.notes}</div>}
-
-            <div style={{...detailItemStyle, marginTop: '15px'}}>
-              <span style={labelStyle}>Quote PDF:</span>
-              {quote.quotePdfUrl ? (
-                <a href={quote.quotePdfUrl} target="_blank" rel="noopener noreferrer" style={{marginRight: '10px'}}>View PDF</a>
-              ) : (
-                <span>No PDF generated yet. </span>
-              )}
-              <button onClick={handleGeneratePdf} disabled={generatingPdf || quote.status === 'ConvertedToPolicy'} style={{fontSize: '0.8em'}}>
-                {generatingPdf ? 'Generating...' : (quote.quotePdfUrl ? 'Re-generate PDF' : 'Generate PDF')}
-              </button>
-              {quote.status === 'ConvertedToPolicy' && <span style={{marginLeft: '10px', fontStyle: 'italic', fontSize: '0.8em'}}>(Cannot generate new PDF for converted quote)</span>}
-            </div>
-          </section>
-
-          <section>
-            <h3>Customer Information</h3>
-            {quote.customer ? (
-              <>
-                <div style={detailItemStyle}><span style={labelStyle}>Name:</span> {quote.customer.firstName} {quote.customer.lastName}</div>
-                <div style={detailItemStyle}><span style={labelStyle}>Email:</span> {quote.customer.email}</div>
-                {/* Link to customer page: <Link to={`/admin/users/edit/${quote.customer._id}`}>View Customer</Link> */}
-              </>
-            ) : <p>No customer associated.</p>}
-          </section>
-
-          <section>
-            <h3>Product Snapshot</h3>
-            <div style={detailItemStyle}><span style={labelStyle}>Name:</span> {quote.productDetailsSnapshot?.name}</div>
-            <div style={detailItemStyle}><span style={labelStyle}>Type:</span> {quote.productDetailsSnapshot?.productType}</div>
-            <div style={detailItemStyle}><span style={labelStyle}>Base Price at Quoting:</span> {quote.productDetailsSnapshot?.basePrice} {quote.productDetailsSnapshot?.currency}</div>
-            {/* Link to actual product: <Link to={`/admin/products/edit/${quote.product?._id}`}>View Product</Link> */}
-          </section>
-        </div>
-
-        <hr style={{margin: '20px 0'}}/>
-        <section>
-            <h4>Quote Inputs (Dynamic Form Data)</h4>
-            <pre style={{backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '4px', whiteSpace: 'pre-wrap', wordBreak: 'break-all'}}>
-                {JSON.stringify(quote.quoteInputs || {}, null, 2)}
-            </pre>
-        </section>
-
-        {quote.status === 'Accepted' && (
-            <div style={{marginTop: '20px'}}>
-                <button
-                    onClick={handleConvertToPolicy}
-                    disabled={submittingPolicy}
-                    style={{padding: '10px 15px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer'}}
-                >
-                    {submittingPolicy ? 'Converting...' : 'Convert to Policy'}
-                </button>
-            </div>
+        {toast && (
+          <div style={{ position: 'fixed', top: 24, right: 24, background: toast.type === 'error' ? '#dc3545' : '#28a745', color: '#fff', padding: '12px 24px', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', zIndex: 2000, fontWeight: 500 }}>
+            {toast.msg}
+          </div>
         )}
 
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+          {/* Quote Information */}
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Quote Information</h3>
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <div>
+                <strong>Quote Number:</strong> {quote.quoteNumber}
+              </div>
+              <div>
+                <strong>Version:</strong> 
+                <span style={{ 
+                  background: quote.isLatestVersion ? '#28a745' : '#6c757d', 
+                  color: 'white', 
+                  padding: '2px 6px', 
+                  borderRadius: '4px', 
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  marginLeft: '8px'
+                }}>
+                  v{quote.version || 1}
+                  {quote.isLatestVersion && ' (Latest)'}
+                </span>
+              </div>
+              <div>
+                <strong>Status:</strong> 
+                <span style={{ 
+                  background: 
+                    quote.status === 'Accepted' ? '#28a745' :
+                    quote.status === 'Rejected' ? '#dc3545' :
+                    quote.status === 'Expired' ? '#ffc107' :
+                    '#007bff', 
+                  color: 'white', 
+                  padding: '2px 6px', 
+                  borderRadius: '4px', 
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  marginLeft: '8px'
+                }}>
+                  {quote.status}
+                </span>
+              </div>
+              <div>
+                <strong>Premium:</strong> {quote.calculatedPremium} {quote.productDetailsSnapshot?.currency}
+              </div>
+              <div>
+                <strong>Created:</strong> {new Date(quote.createdAt).toLocaleString()}
+              </div>
+              {quote.validUntil && (
+                <div>
+                  <strong>Valid Until:</strong> {new Date(quote.validUntil).toLocaleDateString()}
+                </div>
+              )}
+            </div>
+
+            {/* Status Update */}
+            <div style={{ marginTop: '20px' }}>
+              <h4 style={{ marginBottom: '12px' }}>Update Status</h4>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['Draft', 'Quoted', 'Accepted', 'Rejected', 'Expired'].map(status => (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusUpdate(status)}
+                    disabled={saving || quote.status === status}
+                    style={{
+                      padding: '6px 12px',
+                      background: quote.status === status ? '#6c757d' : '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: saving || quote.status === status ? 'not-allowed' : 'pointer',
+                      fontSize: '12px',
+                      opacity: saving || quote.status === status ? 0.6 : 1
+                    }}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Customer Information */}
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Customer Information</h3>
+            {quote.customer ? (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <div>
+                  <strong>Name:</strong> {quote.customer.firstName} {quote.customer.lastName}
+                </div>
+                <div>
+                  <strong>Email:</strong> {quote.customer.email}
+                </div>
+                {quote.customer.phoneNumber && (
+                  <div>
+                    <strong>Phone:</strong> {quote.customer.phoneNumber}
+                  </div>
+                )}
+                {quote.customer.address && (
+                  <div>
+                    <strong>Address:</strong> {quote.customer.address.street}, {quote.customer.address.city}, {quote.customer.address.state} {quote.customer.address.zipCode}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p style={{ color: '#999', fontStyle: 'italic' }}>No customer information available</p>
+            )}
+          </div>
+        </div>
+
+        {/* Product Information */}
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Product Information</h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <div>
+              <strong>Product:</strong> {quote.productDetailsSnapshot?.name}
+            </div>
+            <div>
+              <strong>Type:</strong> {quote.productDetailsSnapshot?.productType}
+            </div>
+            <div>
+              <strong>Base Price:</strong> {quote.productDetailsSnapshot?.basePrice} {quote.productDetailsSnapshot?.currency}
+            </div>
+          </div>
+        </div>
+
+        {/* Quote Inputs */}
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Quote Inputs</h3>
+          <pre style={{ background: '#f8f9fa', padding: '12px', borderRadius: '4px', overflow: 'auto' }}>
+            {JSON.stringify(quote.quoteInputs, null, 2)}
+          </pre>
+        </div>
+
+        {/* Version History */}
+        {showVersionHistory && (
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Version History</h3>
+            {versions.length > 0 ? (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {versions.map((version) => (
+                  <div key={version._id} style={{ 
+                    border: '1px solid #ddd', 
+                    borderRadius: '6px', 
+                    padding: '12px',
+                    background: version._id === quote._id ? '#f8f9fa' : '#fff'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ 
+                          background: version.isLatestVersion ? '#28a745' : '#6c757d', 
+                          color: 'white', 
+                          padding: '2px 6px', 
+                          borderRadius: '4px', 
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}>
+                          v{version.version || 1}
+                          {version.isLatestVersion && ' (Latest)'}
+                        </span>
+                        {version._id === quote._id && (
+                          <span style={{ 
+                            background: '#007bff', 
+                            color: 'white', 
+                            padding: '2px 6px', 
+                            borderRadius: '4px', 
+                            fontSize: '12px',
+                            fontWeight: '500'
+                          }}>
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        {new Date(version.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#333' }}>
+                      <strong>Status:</strong> {version.status}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#333' }}>
+                      <strong>Premium:</strong> {version.calculatedPremium} {version.productDetailsSnapshot?.currency}
+                    </div>
+                    {version.versionHistory && version.versionHistory.length > 0 && (
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
+                        <strong>Changes:</strong> {version.versionHistory[version.versionHistory.length - 1]?.changes || 'No changes recorded'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: '#999', fontStyle: 'italic' }}>No version history available</p>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

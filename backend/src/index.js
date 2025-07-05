@@ -52,6 +52,10 @@ const claimRoutes = require('./routes/claimRoutes');
 const authRoutes = require('./routes/authRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const emailTemplateRoutes = require('./routes/emailTemplateRoutes');
+const insurerRoutes = require('./routes/insurerRoutes');
+const ratingFactorRoutes = require('./routes/ratingFactorRoutes');
+const rateTableRoutes = require('./routes/rateTableRoutes');
+const premiumRoutes = require('./routes/premiumRoutes');
 
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes); // Auth routes for register, login, me
@@ -62,7 +66,10 @@ app.use('/api/v1/policies', policyRoutes);
 app.use('/api/v1/claims', claimRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/email-templates', emailTemplateRoutes);
-
+app.use('/api/v1/insurers', insurerRoutes);
+app.use('/api/v1/rating-factors', ratingFactorRoutes);
+app.use('/api/v1/rate-tables', rateTableRoutes);
+app.use('/api/v1/premium', premiumRoutes);
 
 // Example for future routes (to be expanded)
 

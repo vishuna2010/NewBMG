@@ -2,15 +2,7 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3004/api/v1';
 
-// Placeholder for getting the auth token
-// In a real app, this would come from your auth context or local storage
-// const getToken = () => {
-//   // return localStorage.getItem('adminToken');
-//   // For now, returning null or a dummy token if you want to test protected routes without full login
-//   // This will cause API calls to fail if routes are protected and no valid token is provided.
-//   console.warn("userService: getToken() is a placeholder. Real token management needed.");
-//   return null;
-// };
+const getToken = () => localStorage.getItem('adminToken');
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -30,33 +22,30 @@ const handleResponse = async (response) => {
 
 // Admin User Management Functions
 export const getAllUsers = async (queryParams = {}) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const queryString = new URLSearchParams(queryParams).toString();
   const response = await fetch(`${API_BASE_URL}/users?${queryString}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
 };
 
 export const getUserById = async (id) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
 };
 
 export const updateUser = async (id, userData) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify(userData),
   });
@@ -68,13 +57,11 @@ export const updateUser = async (id, userData) => {
 // If admin can create users directly:
 // export const createUserByAdmin = async (userData) => { ... }
 
-
 export const deleteUser = async (id) => {
-  // const token = getToken(); // Token will be used when auth is wired up
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: 'DELETE',
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
    if (!response.ok) {

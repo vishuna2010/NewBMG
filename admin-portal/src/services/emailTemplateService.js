@@ -2,13 +2,7 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3004/api/v1';
 
-// Placeholder for getting the auth token
-const getToken = () => {
-  console.warn("emailTemplateService: getToken() is a placeholder. Real token management needed.");
-  // This service is for admin actions, so it would need a valid admin token.
-  // For now, calls might fail if backend routes are strictly protected.
-  return null;
-};
+const getToken = () => localStorage.getItem('adminToken');
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -28,11 +22,10 @@ const handleResponse = async (response) => {
 
 // Get all email templates
 export const getAllEmailTemplates = async (queryParams = {}) => {
-  // const token = getToken();
   const queryString = new URLSearchParams(queryParams).toString();
   const response = await fetch(`${API_BASE_URL}/email-templates?${queryString}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
@@ -40,10 +33,9 @@ export const getAllEmailTemplates = async (queryParams = {}) => {
 
 // Get a single email template by its ID or templateName
 export const getEmailTemplate = async (identifier) => {
-  // const token = getToken();
   const response = await fetch(`${API_BASE_URL}/email-templates/${identifier}`, {
     headers: {
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   return handleResponse(response);
@@ -51,12 +43,11 @@ export const getEmailTemplate = async (identifier) => {
 
 // Create a new email template
 export const createEmailTemplate = async (templateData) => {
-  // const token = getToken();
   const response = await fetch(`${API_BASE_URL}/email-templates`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify(templateData),
   });

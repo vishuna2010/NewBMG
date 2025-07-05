@@ -3,6 +3,8 @@
 // Assuming the backend runs on port 3004 during development
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3004/api/v1';
 
+const getToken = () => localStorage.getItem('adminToken');
+
 const handleResponse = async (response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: response.statusText }));
@@ -16,12 +18,20 @@ const handleResponse = async (response) => {
 };
 
 export const getAllProducts = async () => {
-  const response = await fetch(`${API_BASE_URL}/products`);
+  const response = await fetch(`${API_BASE_URL}/products`, {
+    headers: {
+      'Authorization': `Bearer ${getToken()}`,
+    },
+  });
   return handleResponse(response);
 };
 
 export const getProductById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`);
+  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${getToken()}`,
+    },
+  });
   return handleResponse(response);
 };
 
@@ -30,8 +40,7 @@ export const createProduct = async (productData) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // TODO: Add Authorization header if/when auth is implemented
-      // 'Authorization': `Bearer ${getToken()}`,
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify(productData),
   });
@@ -43,7 +52,7 @@ export const updateProduct = async (id, productData) => {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      // TODO: Add Authorization header
+      'Authorization': `Bearer ${getToken()}`,
     },
     body: JSON.stringify(productData),
   });
@@ -54,7 +63,7 @@ export const deleteProduct = async (id) => {
   const response = await fetch(`${API_BASE_URL}/products/${id}`, {
     method: 'DELETE',
     headers: {
-      // TODO: Add Authorization header
+      'Authorization': `Bearer ${getToken()}`,
     },
   });
   // For DELETE, a 200 OK with empty body or 204 No Content is common.

@@ -2,6 +2,7 @@ const Quote = require('../models/Quote');
 const Product = require('../models/Product'); // To fetch product details for snapshot
 const User = require('../models/User'); // To fetch customer email for notification
 const { sendTemplatedEmail } = require('../utils/emailUtils'); // Updated import
+const premiumCalculationService = require('../services/premiumCalculationService');
 
 // @desc    Create a new quote
 // @route   POST /api/v1/quotes
@@ -26,6 +27,30 @@ exports.createQuote = async (req, res, next) => {
       });
     }
 
+    // Validate quote inputs against rating factors
+    const validation = await premiumCalculationService.validateQuoteInputs(product.productType, quoteInputs);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quote input validation failed',
+        details: validation.errors,
+      });
+    }
+
+    // Calculate premium using the rating engine
+    const calculationResult = await premiumCalculationService.calculatePremium({
+      product,
+      quoteInputs,
+      customer: customerId ? await User.findById(customerId) : null
+    });
+
+    if (!calculationResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: `Premium calculation failed: ${calculationResult.error}`,
+      });
+    }
+
     // Snapshot product details
     const productDetailsSnapshot = {
       name: product.name,
@@ -34,22 +59,12 @@ exports.createQuote = async (req, res, next) => {
       currency: product.currency,
     };
 
-    // --- Mock Premium Calculation ---
-    // In a real scenario, this would involve complex logic based on product type,
-    // quoteInputs, rating engine, underwriting rules etc.
-    let calculatedPremium = product.basePrice; // Start with base price
-    // Example: Add 10% if a certain input is true (very simplistic)
-    if (quoteInputs.someOptionalFeature === true) {
-      calculatedPremium *= 1.10;
-    }
-    calculatedPremium = parseFloat(calculatedPremium.toFixed(2));
-    // --- End Mock Premium Calculation ---
-
     const quoteData = {
       product: productId,
       productDetailsSnapshot,
       quoteInputs,
-      calculatedPremium,
+      calculatedPremium: calculationResult.premium,
+      premiumBreakdown: calculationResult.breakdown, // Store the calculation breakdown
       status: 'Quoted', // Or 'Draft' if there's a multi-step process
       // customerId will be added if provided and if user is authenticated and linked
     };
@@ -89,6 +104,11 @@ exports.createQuote = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: newQuote,
+      calculation: {
+        premium: calculationResult.premium,
+        currency: calculationResult.currency,
+        breakdown: calculationResult.breakdown
+      }
     });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -420,5 +440,97 @@ exports.generateQuotePdf = async (req, res, next) => {
       return res.status(404).json({ success: false, error: `Quote not found with id of ${req.params.id}` });
     }
     res.status(500).json({ success: false, error: error.message || 'Server Error generating PDF' });
+  }
+};
+
+// @desc    Create a new version of a quote
+// @route   POST /api/v1/quotes/:id/versions
+// @access  Private (Owner, Agent for their customers, Admin/Staff)
+exports.createNewVersion = async (req, res, next) => {
+  try {
+    const { changes } = req.body;
+    const loggedInUser = req.user;
+
+    let quote = await Quote.findById(req.params.id).populate('customer', 'firstName lastName email');
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: `Quote not found with id of ${req.params.id}`,
+      });
+    }
+
+    // Authorization check (similar to getQuoteById)
+    if (loggedInUser.role === 'customer' && (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)) {
+      return res.status(403).json({ success: false, error: 'Not authorized to create version for this quote' });
+    }
+    if (loggedInUser.role === 'agent' &&
+        (!quote.agentId || quote.agentId.toString() !== loggedInUser.id) &&
+        (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)
+    ) {
+      if (!(quote.agentId && quote.agentId.toString() === loggedInUser.id)) {
+         return res.status(403).json({ success: false, error: 'Agent not authorized for this quote unless directly linked or owner.' });
+      }
+    }
+
+    // Create new version
+    const newVersion = await quote.createNewVersion(changes || 'Quote updated');
+
+    res.status(201).json({
+      success: true,
+      data: newVersion,
+      message: `New version ${newVersion.version} created successfully`,
+    });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, error: `Quote not found with id of ${req.params.id}` });
+    }
+    res.status(500).json({ success: false, error: error.message || 'Server Error creating new version' });
+  }
+};
+
+// @desc    Get all versions of a quote
+// @route   GET /api/v1/quotes/:id/versions
+// @access  Private (Owner, Agent for their customers, Admin/Staff)
+exports.getAllVersions = async (req, res, next) => {
+  try {
+    const loggedInUser = req.user;
+
+    // First check if the quote exists and user has access
+    const quote = await Quote.findById(req.params.id).populate('customer', 'firstName lastName email');
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: `Quote not found with id of ${req.params.id}`,
+      });
+    }
+
+    // Authorization check (similar to getQuoteById)
+    if (loggedInUser.role === 'customer' && (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)) {
+      return res.status(403).json({ success: false, error: 'Not authorized to view versions for this quote' });
+    }
+    if (loggedInUser.role === 'agent' &&
+        (!quote.agentId || quote.agentId.toString() !== loggedInUser.id) &&
+        (!quote.customer || quote.customer._id.toString() !== loggedInUser.id)
+    ) {
+      if (!(quote.agentId && quote.agentId.toString() === loggedInUser.id)) {
+         return res.status(403).json({ success: false, error: 'Agent not authorized for this quote unless directly linked or owner.' });
+      }
+    }
+
+    // Get all versions
+    const versions = await Quote.getAllVersions(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      count: versions.length,
+      data: versions,
+    });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, error: `Quote not found with id of ${req.params.id}` });
+    }
+    res.status(500).json({ success: false, error: error.message || 'Server Error fetching versions' });
   }
 };

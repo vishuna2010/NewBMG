@@ -21,15 +21,19 @@ import UserEditPage from './pages/UserEditPage';
 import PolicyDetailPage from './pages/PolicyDetailPage';
 import QuotesListPage from './pages/QuotesListPage';
 import QuoteDetailPage from './pages/QuoteDetailPage';
+import QuoteCreatePage from './pages/QuoteCreatePage';
 import ClaimDetailPage from './pages/ClaimDetailPage';
 import EmailTemplatesListPage from './pages/EmailTemplatesListPage';
 import EmailTemplateCreatePage from './pages/EmailTemplateCreatePage';
 import EmailTemplateEditPage from './pages/EmailTemplateEditPage';
+import RatingFactorsPage from './pages/RatingFactorsPage';
+import RateTablesPage from './pages/RateTablesPage';
+import { useAuth } from './context/AuthContext';
 
 function App() {
-  // For now, assume NOT authenticated to show login page by default.
-  // This will be replaced by actual auth state from AuthContext later.
-  const isAuthenticated = false; // TEMPORARY CHANGE FOR TESTING LOGIN PAGE
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return null; // Optionally show a loading spinner
 
   return (
     <Router basename="/admin"> {/* Added basename for admin portal */}
@@ -45,6 +49,7 @@ function App() {
                   <Route path="policies" element={<PoliciesPage />} />
                   <Route path="policies/:id" element={<PolicyDetailPage />} />
                   <Route path="quotes" element={<QuotesListPage />} />
+                  <Route path="quotes/new" element={<QuoteCreatePage />} />
                   <Route path="quotes/:id" element={<QuoteDetailPage />} />
                   <Route path="claims" element={<ClaimsPage />} />
                   <Route path="claims/:id" element={<ClaimDetailPage />} />
@@ -60,6 +65,8 @@ function App() {
                   <Route path="email-templates" element={<EmailTemplatesListPage />} />
                   <Route path="email-templates/new" element={<EmailTemplateCreatePage />} />
                   <Route path="email-templates/edit/:identifier" element={<EmailTemplateEditPage />} />
+                  <Route path="rating-factors" element={<RatingFactorsPage />} />
+                  <Route path="rate-tables" element={<RateTablesPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="profile" element={<AdminProfilePage />} />
                   {/* Default for /admin if authenticated */}
@@ -77,16 +84,7 @@ function App() {
           }
         />
         {/* Root path of the application (e.g. http://localhost:3002/) redirects based on auth */}
-        {/* Considering basename="/admin", this might not be hit if deployed under /admin.
-            If deployed at root, it correctly redirects.
-            If deployed under /admin, the web server should route /admin to this app,
-            and then the internal / path (which becomes /admin) will be handled by the /* route above.
-            Let's simplify and assume the app itself handles its root relative to its deployment.
-            If deployed at http://localhost:3002/admin, then accessing this URL
-            will be handled by the path="/*" route above due to the basename.
-         */}
-         <Route path="/" element={ <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace /> } />
-
+        <Route path="/" element={ <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace /> } />
       </Routes>
     </Router>
   );

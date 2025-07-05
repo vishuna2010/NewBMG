@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllPolicies } from '../services/policyService'; // Assuming policyService.js is created
+import { getAllPolicies } from '../services/policyService';
+import MainLayout from '../components/layout/MainLayout';
 
 const PoliciesPage = () => {
   const [policies, setPolicies] = useState([]);
@@ -11,7 +12,7 @@ const PoliciesPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAllPolicies(); // Add query params if needed for filtering
+      const response = await getAllPolicies();
       setPolicies(response.data || []);
     } catch (err) {
       setError(err.message);
@@ -25,64 +26,61 @@ const PoliciesPage = () => {
     fetchPolicies();
   }, []);
 
-  if (loading) return <p>Loading policies...</p>;
-  if (error && policies.length === 0) return <p style={{ color: 'red' }}>Error fetching policies: {error}</p>;
+  const actions = (
+    <Link 
+      to="/policies/new" 
+      style={{ 
+        padding: '8px 16px', 
+        backgroundColor: '#007bff', 
+        color: 'white', 
+        textDecoration: 'none', 
+        borderRadius: '6px',
+        fontSize: '14px',
+        fontWeight: '500',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}
+    >
+      <span>+</span> Create New Policy
+    </Link>
+  );
+
+  if (loading) return <MainLayout pageTitle="Policies" actions={actions}><p>Loading policies...</p></MainLayout>;
+  if (error && policies.length === 0) return <MainLayout pageTitle="Policies" actions={actions}><p style={{ color: 'red' }}>Error fetching policies: {error}</p></MainLayout>;
 
   return (
-    <div>
-      <h1 className="page-title">Policy Management</h1>
-      <div className="content-wrapper">
-        {/* Optional: Button to trigger 'Create Policy From Quote' if admin does this,
-            or this might be a process triggered elsewhere (e.g. from a quote view page) */}
-        {/* <Link to="/admin/policies/create-from-quote" style={buttonStyle}>+ Create Policy from Quote</Link> */}
-
-        {error && <p style={{ color: 'red', marginBottom: '10px' }}>Operation failed: {error}</p>}
-
-        {policies.length === 0 && !loading ? (
-          <p>No policies found.</p>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9' }}>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Policy #</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Customer</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Product</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Status</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Effective Date</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Expiry Date</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Actions</th>
+    <MainLayout pageTitle="Policies" actions={actions}>
+      {policies.length === 0 ? (
+        <p>No policies found.</p>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9' }}>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Policy Number</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Status</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Effective Date</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Expiry Date</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {policies.map((policy) => (
+              <tr key={policy._id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '8px' }}>{policy.policyNumber}</td>
+                <td style={{ padding: '8px' }}>{policy.status}</td>
+                <td style={{ padding: '8px' }}>{new Date(policy.effectiveDate).toLocaleDateString()}</td>
+                <td style={{ padding: '8px' }}>{new Date(policy.expiryDate).toLocaleDateString()}</td>
+                <td style={{ padding: '8px' }}>
+                  <Link to={`/policies/${policy._id}`} style={{ color: '#007bff' }}>View</Link>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {policies.map((policy) => (
-                <tr key={policy._id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{policy.policyNumber}</td>
-                  <td style={{ padding: '8px' }}>
-                    {policy.customer ? `${policy.customer.firstName} ${policy.customer.lastName}` : 'N/A'}
-                  </td>
-                  <td style={{ padding: '8px' }}>
-                    {policy.product ? policy.product.name : 'N/A'}
-                  </td>
-                  <td style={{ padding: '8px' }}>{policy.status}</td>
-                  <td style={{ padding: '8px' }}>{new Date(policy.effectiveDate).toLocaleDateString()}</td>
-                  <td style={{ padding: '8px' }}>{new Date(policy.expiryDate).toLocaleDateString()}</td>
-                  <td style={{ padding: '8px' }}>
-                    <Link to={`/admin/policies/${policy._id}`} style={{ color: '#007bff' }}>View Details</Link>
-                    {/* Edit/Manage status might be on the detail page */}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </MainLayout>
   );
 };
-
-// const buttonStyle = {
-//   marginBottom: '20px', display: 'inline-block', padding: '10px 15px',
-//   backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '5px'
-// };
 
 export default PoliciesPage;

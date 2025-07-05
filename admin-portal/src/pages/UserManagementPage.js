@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllUsers, deleteUser } from '../services/userService'; // Assuming userService.js is created
+import MainLayout from '../components/layout/MainLayout';
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -38,58 +39,55 @@ const UserManagementPage = () => {
     }
   };
 
-  if (loading) return <p>Loading users...</p>;
+  if (loading) return <MainLayout pageTitle="User Management"><p>Loading users...</p></MainLayout>;
   // A more sophisticated error display could be a dedicated component
-  if (error && users.length === 0) return <p style={{ color: 'red' }}>Error fetching users: {error}</p>;
+  if (error && users.length === 0) return <MainLayout pageTitle="User Management"><p style={{ color: 'red' }}>Error fetching users: {error}</p></MainLayout>;
 
 
   return (
-    <div>
-      <h1 className="page-title">User Management</h1>
-      <div className="content-wrapper">
-        {/* Optional: Button to create a new user if admin can do this directly */}
-        {/* <Link to="/admin/users/new" style={buttonStyle}>+ Create New User</Link> */}
+    <MainLayout pageTitle="User Management">
+      {/* Optional: Button to create a new user if admin can do this directly */}
+      {/* <Link to="/admin/users/new" style={buttonStyle}>+ Create New User</Link> */}
 
-        {error && <p style={{ color: 'red', marginBottom: '10px' }}>Operation failed: {error}</p>}
+      {error && <p style={{ color: 'red', marginBottom: '10px' }}>Operation failed: {error}</p>}
 
 
-        {users.length === 0 && !loading ? (
-          <p>No users found.</p>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9' }}>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Name</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Email</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Role</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Status</th>
-                <th style={{ padding: '8px', textAlign: 'left' }}>Actions</th>
+      {users.length === 0 && !loading ? (
+        <p>No users found.</p>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9' }}>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Name</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Email</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Role</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Status</th>
+              <th style={{ padding: '8px', textAlign: 'left' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user._id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '8px' }}>{user.firstName} {user.lastName}</td>
+                <td style={{ padding: '8px' }}>{user.email}</td>
+                <td style={{ padding: '8px' }}>{user.role}</td>
+                <td style={{ padding: '8px' }}>{user.isActive ? 'Active' : 'Inactive'}</td>
+                <td style={{ padding: '8px' }}>
+                  <Link to={`/admin/users/edit/${user._id}`} style={{ marginRight: '10px', color: '#007bff' }}>Edit</Link>
+                  <button
+                      onClick={() => handleDelete(user._id)}
+                      style={{ color: 'red', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      disabled={user.role === 'admin'} // Example: Prevent deleting other admins
+                  >
+                      Delete
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{user.firstName} {user.lastName}</td>
-                  <td style={{ padding: '8px' }}>{user.email}</td>
-                  <td style={{ padding: '8px' }}>{user.role}</td>
-                  <td style={{ padding: '8px' }}>{user.isActive ? 'Active' : 'Inactive'}</td>
-                  <td style={{ padding: '8px' }}>
-                    <Link to={`/admin/users/edit/${user._id}`} style={{ marginRight: '10px', color: '#007bff' }}>Edit</Link>
-                    <button
-                        onClick={() => handleDelete(user._id)}
-                        style={{ color: 'red', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                        disabled={user.role === 'admin'} // Example: Prevent deleting other admins
-                    >
-                        Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </MainLayout>
   );
 };
 
