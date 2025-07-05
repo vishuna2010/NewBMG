@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Tabs, Card, Typography, Alert } from 'antd'; // Import Tabs, Card, Typography, Alert
 import ProductForm from '../components/products/ProductForm';
+import UnderwritingRulesManager from '../components/products/UnderwritingRulesManager'; // Import the new component
 import { getProductById, updateProduct } from '../services/productService';
+
+const { TabPane } = Tabs;
 
 const ProductEditPage = () => {
   const { id: productId } = useParams(); // Get product ID from URL params
@@ -59,13 +63,32 @@ const ProductEditPage = () => {
   if (!product) return <p>Product not found.</p>; // Should be caught by error state mostly
 
   return (
-    <div>
-      <h1 className="page-title">Edit Product: {product.name}</h1>
-      <div className="content-wrapper">
-        {error && <p style={{ color: 'red' }}>Submit Error: {error}</p>}
-        <ProductForm initialData={product} onSubmit={handleSubmit} isEditMode={true} />
-        {submitting && <p>Submitting changes...</p>}
-      </div>
+    <div style={{ padding: '20px' }}>
+      <Typography.Title level={2} style={{ marginBottom: '20px' }}>
+        Edit Product: {product.name}
+      </Typography.Title>
+
+      {error && !submitting && <Alert message={`Error: ${error}`} type="error" showIcon style={{ marginBottom: '20px' }} />}
+      {/* Display submit error separately if needed, or rely on messages from service */}
+
+      <Tabs defaultActiveKey="1">
+        <TabPane tab="Product Details" key="1">
+          <Card>
+            <ProductForm initialData={product} onSubmit={handleSubmit} isEditMode={true} />
+            {submitting && <p style={{marginTop: '10px'}}>Submitting changes...</p>}
+          </Card>
+        </TabPane>
+        <TabPane tab="Underwriting Rules" key="2" disabled={!product._id || !!error}>
+          {/* Also disable if there was an error loading the product initially */}
+          <Card>
+            {product._id ? (
+              <UnderwritingRulesManager productId={product._id} />
+            ) : (
+              <Alert message="Product details must be loaded and saved successfully before managing underwriting rules." type="info" showIcon />
+            )}
+          </Card>
+        </TabPane>
+      </Tabs>
     </div>
   );
 };

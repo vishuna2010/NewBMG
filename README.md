@@ -147,6 +147,13 @@ npm start     # Starts on port 3003
 - `POST /api/v1/rate-tables` - Create rate table
 - `POST /api/v1/premium/calculate` - Calculate premium
 
+#### Underwriting Rules
+- `POST /api/v1/products/:productId/underwritingrules` - Create an underwriting rule for a product
+- `GET /api/v1/products/:productId/underwritingrules` - Get all underwriting rules for a product
+- `GET /api/v1/underwritingrules/:id` - Get a specific underwriting rule by its ID
+- `PUT /api/v1/underwritingrules/:id` - Update an underwriting rule
+- `DELETE /api/v1/underwritingrules/:id` - Delete an underwriting rule
+
 #### Quotes & Policies
 - `GET /api/v1/quotes` - Get all quotes
 - `POST /api/v1/quotes` - Create quote

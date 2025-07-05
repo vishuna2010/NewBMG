@@ -4,7 +4,7 @@
 
 *   [x] Suggest Tech Stack
 *   [x] Outline Features and Functions
-*   [x/~) Organize into Menu Structure (Initial structure defined, may need refinement as features are built)
+*   [x] Organize into Menu Structure (Admin portal sidebar refactored to accordion menu with Ant Design)
 *   [x] Backend Project Setup (Node.js/Express.js basic structure)
     *   [x] Scaffold Backend Directory Structure
     *   [x] Create Core Backend Files (index.js, db.js, env.js)
@@ -28,7 +28,7 @@
     *   [x] Define Product Model (MongoDB Schema)
     *   [~] API: Define/Configure Insurance Products (CRUD) - *Basic CRUD implemented*
     *   [~] API: Manage Product Details (coverage, premiums, terms, conditions, riders) - *Basic CRUD allows management*
-    *   [ ] API: Set up Underwriting Rules (basic structure)
+    *   [x] API: Set up Underwriting Rules (basic structure) - *CRUD APIs implemented*
     *   [x] API: Manage Insurer/Carrier Information for Products
     *   [x] API: Rate Table Management - *COMPLETED: Full CRUD, versioning, active status management*
 *   **Quote Engine (API & Core Logic):**
@@ -265,7 +265,7 @@
 *   **Product Management (`ProductsPage.js`, `ProductCreatePage.js`, `ProductEditPage.js`):**
     *   [~] UI: Product List page (`ProductsPage.js`) - *Basic list, create/edit/delete buttons implemented.*
     *   [~] UI: Create Product page (`ProductCreatePage.js` with `ProductForm.js`) - *Form structure and create functionality implemented.*
-    *   [~] UI: Edit Product page (`ProductEditPage.js` with `ProductForm.js`) - *Form structure, data loading, and update functionality implemented.*
+    *   [x] UI: Edit Product page (`ProductEditPage.js` with `ProductForm.js`) - *Form structure, data loading, update functionality, and Underwriting Rules tab implemented.*
     *   [ ] UI: Review Product forms for styling consistency and advanced validation.
 *   **Client Management (`CustomersPage.js` & potential sub-components):** -> Merged into User Management UI
     *   [x] UI: Full CRUD for Clients (Placeholder page created; "Full CRUD" is future work). -> See User Management UI

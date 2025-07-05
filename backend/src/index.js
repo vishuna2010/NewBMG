@@ -56,6 +56,7 @@ const insurerRoutes = require('./routes/insurerRoutes');
 const ratingFactorRoutes = require('./routes/ratingFactorRoutes');
 const rateTableRoutes = require('./routes/rateTableRoutes');
 const premiumRoutes = require('./routes/premiumRoutes');
+const underwritingRuleRoutes = require('./routes/underwritingRuleRoutes'); // Import new routes
 
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes); // Auth routes for register, login, me
@@ -70,6 +71,7 @@ app.use('/api/v1/insurers', insurerRoutes);
 app.use('/api/v1/rating-factors', ratingFactorRoutes);
 app.use('/api/v1/rate-tables', rateTableRoutes);
 app.use('/api/v1/premium', premiumRoutes);
+app.use('/api/v1/underwritingrules', underwritingRuleRoutes); // Mount new routes
 
 // Example for future routes (to be expanded)
 
