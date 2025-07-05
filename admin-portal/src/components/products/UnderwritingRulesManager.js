@@ -226,7 +226,7 @@ const UnderwritingRulesManager = ({ productId }) => {
             label={
                 <Space>
                     Condition
-                    <Tooltip title="Define the rule condition. E.g., 'age < 18', 'vehicle.year < 2005', 'customer.address.state === \"CA\"'. This will be evaluated by the backend.">
+                    <Tooltip title="Define the rule condition. E.g., 'age < 18', 'vehicle.year < 2005', 'customer.address.state === &quot;CA&quot;'. This will be evaluated by the backend.">
                         <QuestionCircleOutlined />
                     </Tooltip>
                 </Space>
